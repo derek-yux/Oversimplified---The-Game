@@ -971,6 +971,31 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
   }
 
   updateHealthBars();
+  if (target.hp <= 0) {
+    target.hp = 0;
+    updateHealthBars();
+
+    // Check victory
+    const aliveEnemies = enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
+
+        setTimeout(() => {
+          showBossCutscene("King George III", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
+      return;
+    }
+  }
   endTurn();
 }
 
@@ -1005,6 +1030,31 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
 
   hero.ultimate.used = true;
   updateHealthBars();
+  if (target.hp <= 0) {
+    target.hp = 0;
+    updateHealthBars();
+
+    // Check victory
+    const aliveEnemies = enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
+
+        setTimeout(() => {
+          showBossCutscene("King George III", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
+      return;
+    }
+  }
   endTurn();
 }
 
