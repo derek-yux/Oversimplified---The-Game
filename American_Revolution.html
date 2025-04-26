@@ -463,6 +463,9 @@
 
   <script>
     let activeHeroIndex = 0; // Start with first hero
+    let awaitingTarget = false;
+let pendingHeroIndex = null;
+let pendingAttackType = null; // "normal" / "special" / "ultimate"
     const allHeroes = [
   {
     id: 1,
@@ -809,6 +812,68 @@ function renderBattleArena() {
     enemyFieldDiv.appendChild(card);
   });
 }
+function actuallyAttackEnemy(heroIndex, enemyIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const target = enemies[enemyIndex];
+
+  if (!target || target.hp <= 0) {
+    alert("This enemy is already defeated!");
+    return;
+  }
+
+  const randomAttackLine = hero.attackLines[Math.floor(Math.random() * hero.attackLines.length)];
+  showFloatingLine(randomAttackLine, "player", heroIndex);
+
+  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${heroIndex + 1}) .character-image`);
+  if (heroCard) {
+    heroCard.classList.add('attack-animation');
+    setTimeout(() => {
+      heroCard.classList.remove('attack-animation');
+    }, 500);
+  }
+
+  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1}) .character-image`);
+  if (enemyCard) {
+    setTimeout(() => {
+      enemyCard.classList.add('hit-animation');
+      setTimeout(() => {
+        enemyCard.classList.remove('hit-animation');
+      }, 500);
+    }, 200);
+  }
+
+  // Apply damage
+  target.hp -= hero.attack;
+  updateHealthBars();
+
+  if (target.hp <= 0) {
+    target.hp = 0;
+    updateHealthBars();
+
+    // Check victory
+    const aliveEnemies = enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
+
+        setTimeout(() => {
+          showBossCutscene("King George III", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
+      return;
+    }
+  }
+
+  endTurn();
+}
 
 function createCharacterCard(character, type, index) {
   const card = document.createElement('div');
@@ -827,13 +892,26 @@ function createCharacterCard(character, type, index) {
 img.addEventListener('mouseenter', (e) => showCharacterTooltip(e, character));
 img.addEventListener('mouseleave', hideTooltip);
 if (type === 'enemy') {
-    // 🛡️ Clicking an enemy when it's your turn
-    card.addEventListener('click', () => {
-      if (!isPlayerTurn) return;
-      if (character.hp <= 0) return; // can't attack dead enemy
-      playerAttackEnemy(index);
-    });
-  }
+  card.addEventListener('click', () => {
+    if (!isPlayerTurn) return;
+    if (character.hp <= 0) return; // can't attack dead enemy
+
+    if (awaitingTarget) {
+      if (pendingAttackType === "normal") {
+        actuallyAttackEnemy(pendingHeroIndex, index);
+      } else if (pendingAttackType === "special") {
+        actuallyUseSpecialOnEnemy(pendingHeroIndex, index);
+      } else if (pendingAttackType === "ultimate") {
+        actuallyUseUltimateOnEnemy(pendingHeroIndex, index);
+      }
+
+      awaitingTarget = false;
+      pendingHeroIndex = null;
+      pendingAttackType = null;
+    }
+  });
+}
+
   if (type === 'player') {
   const attackBtn = document.createElement('button');
   attackBtn.classList.add('battle-button');
@@ -869,6 +947,68 @@ if (type === 'enemy') {
 
   return card;
 }
+
+function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const target = enemies[enemyIndex];
+
+  if (!target || target.hp <= 0) {
+    alert("This enemy is already defeated!");
+    return;
+  }
+
+  if (hero.name === "Hannibal Barca") {
+    target.hp -= hero.special.damage;
+    showBattleAnnouncement("🐘 Hannibal charges the enemy!");
+  } else if (hero.name === "Winston Churchill") {
+    selectedHeroes.forEach(h => {
+      h.attack += hero.special.buff.attackBoost;
+    });
+    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
+  } else if (hero.name === "Grigori Rasputin") {
+    hero.hp = Math.min(hero.maxHp, hero.hp + hero.special.heal);
+    showBattleAnnouncement("✨ Rasputin mystically heals himself!");
+  }
+
+  updateHealthBars();
+  endTurn();
+}
+
+function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
+  const hero = selectedHeroes[heroIndex];
+  if (hero.ultimate.used) {
+    alert("Ultimate already used!");
+    return;
+  }
+
+  const target = enemies[enemyIndex];
+
+  if (!target || target.hp <= 0) {
+    alert("This enemy is already defeated!");
+    return;
+  }
+
+  if (hero.name === "Hannibal Barca" && currentTurnIndex >= 4) {
+    playElephantStampede();
+    enemies.forEach(e => e.hp -= 500);
+    showBattleAnnouncement("🐘 Hannibal's March Over the Alps!!");
+  } else if (hero.name === "Winston Churchill") {
+    playShieldWave();
+    selectedHeroes.forEach(h => {
+      h.defenseBoost = 20;
+    });
+    showBattleAnnouncement("🛡️ Churchill's Iron Will! Defense boosted!");
+  } else {
+    alert("Ultimate not ready yet!");
+    return;
+  }
+
+  hero.ultimate.used = true;
+  updateHealthBars();
+  endTurn();
+}
+
+
 function playerAttackEnemy(enemyIndex) {
   const hero = selectedHeroes[activeHeroIndex];
   const target = enemies[enemyIndex];
@@ -1007,63 +1147,37 @@ document.addEventListener('mousemove', function(e) {
 });
 
 function playerSpecial(heroIndex) {
-  const hero = selectedHeroes[heroIndex];
-  const target = enemies[0]; // Default target
-
   if (heroIndex !== activeHeroIndex) {
-  alert("Not your turn! Wait for your hero's turn.");
-  return;
-}
-
-  if (hero.name === "Hannibal Barca") {
-    target.hp -= hero.special.damage;
-    updateHealthBars();
-    endTurn();
-  } else if (hero.name === "Winston Churchill") {
-    selectedHeroes.forEach(h => {
-      h.attack += hero.special.buff.attackBoost;
-    });
-    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
-    endTurn();
-  } else if (hero.name === "Grigori Rasputin") {
-    hero.hp = Math.min(hero.maxHp, hero.hp + hero.special.heal);
-    updateHealthBars();
-    showBattleAnnouncement("✨ Rasputin heals himself!");
-    endTurn();
+    alert("Not your turn! Wait for your hero's turn.");
+    return;
   }
+
+  awaitingTarget = true;
+  pendingHeroIndex = heroIndex;
+  pendingAttackType = "special";
+
+  showBattleAnnouncement("✨ Choose an enemy for Special Attack!");
 }
 
 function playerUltimate(heroIndex) {
-  const hero = selectedHeroes[heroIndex];
   if (heroIndex !== activeHeroIndex) {
-  alert("Not your turn! Wait for your hero's turn.");
-  return;
-}
+    alert("Not your turn! Wait for your hero's turn.");
+    return;
+  }
 
+  const hero = selectedHeroes[heroIndex];
   if (hero.ultimate.used) {
     alert("Ultimate already used!");
     return;
   }
 
-  if (hero.name === "Hannibal Barca" && currentTurnIndex >= 4) {
-    playElephantStampede();
-    enemies.forEach(e => e.hp -= 500);
-    showBattleAnnouncement("🐘 Hannibal's March Over the Alps!!");
-  } else if (hero.name === "Winston Churchill") {
-    playShieldWave();
-    selectedHeroes.forEach(h => {
-      h.defenseBoost = 20;
-    });
-    showBattleAnnouncement("🛡️ Churchill's Iron Will! Defense boosted!");
-  } else {
-    alert("Ultimate not ready yet!");
-    return;
-  }
+  awaitingTarget = true;
+  pendingHeroIndex = heroIndex;
+  pendingAttackType = "ultimate";
 
-  hero.ultimate.used = true;
-  updateHealthBars();
-  endTurn();
+  showBattleAnnouncement("💥 Choose an enemy for Ultimate!");
 }
+
 
 function showFloatingLine(text, characterType, characterIndex) {
   const card = document.querySelector(`#${characterType}-team .character-card:nth-child(${characterIndex + 1})`);
@@ -1139,71 +1253,18 @@ function updateHealthBars() {
   });
 }
 function playerAttack(heroIndex) {
-  const hero = selectedHeroes[heroIndex];
-  const target = enemies[0];
-
   if (heroIndex !== activeHeroIndex) {
     alert("Not your turn! Wait for your hero's turn.");
     return;
   }
 
-  // 🗣 Hero shouts a random attack line
-  const randomAttackLine = hero.attackLines[Math.floor(Math.random() * hero.attackLines.length)];
-  showFloatingLine(randomAttackLine, "player", heroIndex);
+  awaitingTarget = true;
+  pendingHeroIndex = heroIndex;
+  pendingAttackType = "normal";
 
-  // Apply attack animation to hero image
-  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${heroIndex + 1}) .character-image`);
-  if (heroCard) {
-    heroCard.classList.add('attack-animation');
-    setTimeout(() => {
-      heroCard.classList.remove('attack-animation');
-    }, 500);
-  }
-
-  // Apply hit animation to enemy image
-  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(1) .character-image`);
-  if (enemyCard) {
-    setTimeout(() => {
-      enemyCard.classList.add('hit-animation');
-      setTimeout(() => {
-        enemyCard.classList.remove('hit-animation');
-      }, 500);
-    }, 200); // small delay to match hero attack animation
-  }
-
-  // 🛡️ Apply damage
-  target.hp -= hero.attack;
-  updateHealthBars();
-
-  // 💥 If enemy dies
-  if (target.hp <= 0) {
-    enemies.splice(0, 1);
-
-    if (enemies.length === 0) {
-      if (enemyWave === 1) {
-        enemyWave = 2;
-
-        // Show "Boss Approaching" announcement FIRST
-        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
-
-        setTimeout(() => {
-  showBossCutscene("King George III", () => {
-    enemies = generateEnemiesForLevel(1, 2);
-    renderBattleArena();
-    isPlayerTurn = true;
-    updateTurn();
-  });
-}, 1500);
-
-      } else if (enemyWave === 2) {
-        handleVictory(1);
-        return;
-      }
-    }
-  }
-
-  endTurn();
+  showBattleAnnouncement("🛡️ Choose an enemy to attack!");
 }
+
 function handleVictory(level) {
   // 1. Create colorful victory banner (full screen)
   const overlay = document.createElement('div');
