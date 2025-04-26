@@ -150,6 +150,23 @@
   50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+.dead-enemy {
+  filter: grayscale(100%) brightness(0.5);
+  opacity: 0.6;
+  pointer-events: none; /* Prevent clicking dead enemies */
+}
+
+.active-character {
+  border: 4px solid gold;
+  box-shadow: 0 0 20px gold;
+  animation: pulseActive 1s infinite alternate;
+}
+
+@keyframes pulseActive {
+  0% { box-shadow: 0 0 10px gold; }
+  100% { box-shadow: 0 0 20px orange; }
+}
+
 @keyframes flipInNew {
     0% {
         transform: translate(-50%, -50%) rotateY(90deg);
@@ -445,6 +462,7 @@
   </button>  
 
   <script>
+    let activeHeroIndex = 0; // Start with first hero
     const allHeroes = [
   {
     id: 1,
@@ -808,7 +826,14 @@ function createCharacterCard(character, type, index) {
 // Attach hover events for stats tooltip
 img.addEventListener('mouseenter', (e) => showCharacterTooltip(e, character));
 img.addEventListener('mouseleave', hideTooltip);
-
+if (type === 'enemy') {
+    // 🛡️ Clicking an enemy when it's your turn
+    card.addEventListener('click', () => {
+      if (!isPlayerTurn) return;
+      if (character.hp <= 0) return; // can't attack dead enemy
+      playerAttackEnemy(index);
+    });
+  }
   if (type === 'player') {
   const attackBtn = document.createElement('button');
   attackBtn.classList.add('battle-button');
@@ -842,9 +867,69 @@ img.addEventListener('mouseleave', hideTooltip);
   card.appendChild(ultimateBtn);
 }
 
-
-
   return card;
+}
+function playerAttackEnemy(enemyIndex) {
+  const hero = selectedHeroes[activeHeroIndex];
+  const target = enemies[enemyIndex];
+
+  if (!target || target.hp <= 0) {
+    alert("This enemy is already defeated!");
+    return;
+  }
+
+  const randomAttackLine = hero.attackLines[Math.floor(Math.random() * hero.attackLines.length)];
+  showFloatingLine(randomAttackLine, "player", activeHeroIndex);
+
+  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${activeHeroIndex + 1}) .character-image`);
+  if (heroCard) {
+    heroCard.classList.add('attack-animation');
+    setTimeout(() => {
+      heroCard.classList.remove('attack-animation');
+    }, 500);
+  }
+
+  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1}) .character-image`);
+  if (enemyCard) {
+    setTimeout(() => {
+      enemyCard.classList.add('hit-animation');
+      setTimeout(() => {
+        enemyCard.classList.remove('hit-animation');
+      }, 500);
+    }, 200);
+  }
+
+  // Apply damage
+  target.hp -= hero.attack;
+  updateHealthBars();
+
+  if (target.hp <= 0) {
+    target.hp = 0; // Make sure health doesn't go negative
+    updateHealthBars(); // Update visuals again to gray out dead enemy
+
+    // Check if all enemies defeated
+    const aliveEnemies = enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
+
+        setTimeout(() => {
+          showBossCutscene("King George III", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
+      return; // Important: Stop further processing
+    }
+  }
+
+  endTurn();
 }
 
 function showCharacterTooltip(event, character) {
@@ -925,6 +1010,11 @@ function playerSpecial(heroIndex) {
   const hero = selectedHeroes[heroIndex];
   const target = enemies[0]; // Default target
 
+  if (heroIndex !== activeHeroIndex) {
+  alert("Not your turn! Wait for your hero's turn.");
+  return;
+}
+
   if (hero.name === "Hannibal Barca") {
     target.hp -= hero.special.damage;
     updateHealthBars();
@@ -945,6 +1035,10 @@ function playerSpecial(heroIndex) {
 
 function playerUltimate(heroIndex) {
   const hero = selectedHeroes[heroIndex];
+  if (heroIndex !== activeHeroIndex) {
+  alert("Not your turn! Wait for your hero's turn.");
+  return;
+}
 
   if (hero.ultimate.used) {
     alert("Ultimate already used!");
@@ -1020,14 +1114,38 @@ function canUseUltimate(hero) {
   return false;
 }
 
+
 function updateHealthBar(type, index, current, max) {
   const fill = document.getElementById(`${type}-hp-${index}`);
   const percent = Math.max((current / max) * 100, 0);
   fill.style.width = percent + '%';
 }
+function updateHealthBars() {
+  selectedTeam.forEach((hero, i) => {
+    updateHealthBar('player', i, hero.hp, hero.maxHp);
+  });
+
+  enemies.forEach((enemy, i) => {
+    updateHealthBar('enemy', i, enemy.hp, enemy.maxHp);
+
+    const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${i + 1})`);
+    if (enemyCard) {
+      if (enemy.hp <= 0) {
+        enemyCard.classList.add('dead-enemy');
+      } else {
+        enemyCard.classList.remove('dead-enemy');
+      }
+    }
+  });
+}
 function playerAttack(heroIndex) {
   const hero = selectedHeroes[heroIndex];
   const target = enemies[0];
+
+  if (heroIndex !== activeHeroIndex) {
+    alert("Not your turn! Wait for your hero's turn.");
+    return;
+  }
 
   // 🗣 Hero shouts a random attack line
   const randomAttackLine = hero.attackLines[Math.floor(Math.random() * hero.attackLines.length)];
@@ -1200,6 +1318,26 @@ function updateTurn() {
   const turnIndicator = document.getElementById('turn-indicator');
   const turnCounter = document.getElementById('turn-counter');
 
+  turnCounter.textContent = `Turn ${currentTurnIndex + 1}`;
+
+  if (isPlayerTurn) {
+    activeHeroIndex = currentTurnIndex % selectedHeroes.length; // Cycle through heroes
+    // Clear previous active highlights
+document.querySelectorAll('.character-card').forEach(card => {
+  card.classList.remove('active-character');
+});
+
+// Highlight the active hero
+const playerCards = document.querySelectorAll('#player-team .character-card');
+if (playerCards[activeHeroIndex]) {
+  playerCards[activeHeroIndex].classList.add('active-character');
+}
+    turnIndicator.textContent = `🎯 Your Turn - ${selectedHeroes[activeHeroIndex].name}!`;
+  } else {
+    turnIndicator.textContent = "🎯 Enemy Turn!";
+  }
+  
+
   if (isPlayerTurn) {
   const ultimateButtons = document.querySelectorAll('.battle-button');
 
@@ -1235,9 +1373,25 @@ function updateTurn() {
 }
 
 function enemyTurn() {
-  const targetIndex = Math.floor(Math.random() * selectedHeroes.length);
-  const targetHero = selectedHeroes[targetIndex];
-  const attacker = enemies[0]; // Always first enemy/boss
+  const aliveHeroes = selectedHeroes.filter(h => h.hp > 0);
+  const targetIndex = Math.floor(Math.random() * aliveHeroes.length);
+  const targetHero = aliveHeroes[targetIndex];
+
+  const aliveEnemies = enemies.filter(e => e.hp > 0);
+  const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+  // Clear previous active highlights
+document.querySelectorAll('.character-card').forEach(card => {
+  card.classList.remove('active-character');
+});
+
+// Highlight the active enemy
+const enemyCards = document.querySelectorAll('#enemy-field .character-card');
+const attackerIndex = enemies.indexOf(attacker);
+if (enemyCards[attackerIndex]) {
+  enemyCards[attackerIndex].classList.add('active-character');
+}
+
+
 
   // 🛠 Boss says attack line if available
   if (attacker.attackLines) {
@@ -1355,25 +1509,14 @@ function useEnemySpecial(boss) {
   updateHealthBars();
 }
 
-function updateHealthBars() {
-  selectedTeam.forEach((hero, i) => {
-    updateHealthBar('player', i, hero.hp, hero.maxHp);
-  });
-
-  enemies.forEach((enemy, i) => {
-    updateHealthBar('enemy', i, enemy.hp, enemy.maxHp);
-  });
-}
-
 
 function generateEnemiesForLevel(level, wave) {
   if (level === 1 && wave === 1) {
-    return [{ 
-      name: "British Guard", 
-      hp: 100, 
-      maxHp: 100, 
-      image: "images/bosses/britishsoldier.png" // (or whatever your guard image is)
-    }];
+    return [
+      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" }
+    ];
   }
   if (level === 1 && wave === 2) {
     // 🛠️ Use the full King George III template
