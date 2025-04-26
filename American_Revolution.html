@@ -150,6 +150,17 @@
   50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+.glow-attackable {
+  animation: glowAttackable 1s infinite alternate;
+  box-shadow: 0 0 10px #17BEBB, 0 0 20px #17BEBB;
+  cursor: pointer;
+}
+
+@keyframes glowAttackable {
+  0% { box-shadow: 0 0 5px #17BEBB; }
+  100% { box-shadow: 0 0 20px #17BEBB; }
+}
+
 .dead-enemy {
   filter: grayscale(100%) brightness(0.5);
   opacity: 0.6;
@@ -460,8 +471,13 @@
   <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
     Next!
   </button>  
-
+  <div id="custom-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; border:3px solid #E53D00; padding:20px 40px; border-radius:15px; font-size:1.2em; z-index:10000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+    <div id="popup-message">Placeholder</div>
+    <button onclick="closeCustomPopup()" style="margin-top:15px; padding:10px 20px; background:#E53D00; color:white; border:none; border-radius:8px; cursor:pointer;">OK</button>
+  </div>
+  
   <script>
+    let targetFriendly = false; // NEW - whether the player should target a friendly hero
     let activeHeroIndex = 0; // Start with first hero
     let awaitingTarget = false;
 let pendingHeroIndex = null;
@@ -817,7 +833,7 @@ function actuallyAttackEnemy(heroIndex, enemyIndex) {
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    alert("This enemy is already defeated!");
+    showCustomPopup("This enemy has already been defeated!");
     return;
   }
 
@@ -894,9 +910,8 @@ img.addEventListener('mouseleave', hideTooltip);
 if (type === 'enemy') {
   card.addEventListener('click', () => {
     if (!isPlayerTurn) return;
-    if (character.hp <= 0) return; // can't attack dead enemy
-
-    if (awaitingTarget) {
+    if (character.hp <= 0) return;
+    if (awaitingTarget && !targetFriendly) {
       if (pendingAttackType === "normal") {
         actuallyAttackEnemy(pendingHeroIndex, index);
       } else if (pendingAttackType === "special") {
@@ -908,11 +923,12 @@ if (type === 'enemy') {
       awaitingTarget = false;
       pendingHeroIndex = null;
       pendingAttackType = null;
+      clearHighlightAttackableEnemies();
     }
   });
 }
 
-  if (type === 'player') {
+if (type === 'player') {
   const attackBtn = document.createElement('button');
   attackBtn.classList.add('battle-button');
   attackBtn.textContent = "Attack";
@@ -943,9 +959,61 @@ if (type === 'enemy') {
   card.appendChild(attackBtn);
   card.appendChild(specialBtn);
   card.appendChild(ultimateBtn);
+
+  // 🔥 NOW ADD THIS extra click listener here:
+  card.addEventListener('click', () => {
+    if (!isPlayerTurn) return;
+    if (character.hp <= 0) return;
+    if (awaitingTarget && targetFriendly) {
+      if (pendingAttackType === "special") {
+        actuallyUseSpecialOnAlly(pendingHeroIndex, index);
+      }
+      
+      awaitingTarget = false;
+      pendingHeroIndex = null;
+      pendingAttackType = null;
+      clearHighlightFriendlyHeroes();
+    }
+  });
 }
 
   return card;
+}
+function highlightFriendlyHeroes() {
+  selectedTeam.forEach((hero, index) => {
+    const heroCard = document.querySelector(`#player-team .character-card:nth-child(${index + 1})`);
+    if (heroCard && hero.hp > 0) {
+      heroCard.classList.add('glow-attackable');
+    }
+  });
+}
+
+function clearHighlightFriendlyHeroes() {
+  document.querySelectorAll('#player-team .character-card').forEach(card => {
+    card.classList.remove('glow-attackable');
+  });
+}
+function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const ally = selectedHeroes[allyIndex];
+
+  if (!ally || ally.hp <= 0) {
+    showCustomPopup("This ally is already defeated!");
+    return;
+  }
+
+  if (hero.name === "Grigori Rasputin") {
+    ally.hp = Math.min(ally.maxHp, ally.hp + hero.special.heal);
+    showBattleAnnouncement(`✨ Rasputin heals ${ally.name}!`);
+  } else if (hero.name === "Winston Churchill") {
+    selectedHeroes.forEach(h => {
+      h.attack += hero.special.buff.attackBoost;
+    });
+    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
+  }
+
+  updateHealthBars();
+  endTurn();
 }
 
 function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
@@ -953,7 +1021,7 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    alert("This enemy is already defeated!");
+    showCustomPopup("This enemy has already been defeated!");
     return;
   }
 
@@ -1002,14 +1070,14 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
 function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
   const hero = selectedHeroes[heroIndex];
   if (hero.ultimate.used) {
-    alert("Ultimate already used!");
+    showCustomPopup("Ultimate already used!");
     return;
   }
 
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    alert("This enemy is already defeated!");
+    showCustomPopup("This enemy has already been defeated!");
     return;
   }
 
@@ -1024,7 +1092,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     });
     showBattleAnnouncement("🛡️ Churchill's Iron Will! Defense boosted!");
   } else {
-    alert("Ultimate not ready yet!");
+    showCustomPopup("⏳ Ultimate not ready yet!");
     return;
   }
 
@@ -1064,7 +1132,7 @@ function playerAttackEnemy(enemyIndex) {
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    alert("This enemy is already defeated!");
+    showCustomPopup("This enemy has already been defeated!");
     return;
   }
 
@@ -1198,34 +1266,61 @@ document.addEventListener('mousemove', function(e) {
 
 function playerSpecial(heroIndex) {
   if (heroIndex !== activeHeroIndex) {
-    alert("Not your turn! Wait for your hero's turn.");
+    showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
+
+  const hero = selectedHeroes[heroIndex];
 
   awaitingTarget = true;
   pendingHeroIndex = heroIndex;
   pendingAttackType = "special";
 
-  showBattleAnnouncement("✨ Choose an enemy for Special Attack!");
+  // Check if this special should target friendly
+  if (hero.name === "Grigori Rasputin" || hero.name === "Winston Churchill") {
+    targetFriendly = true;
+    showBattleAnnouncement("✨ Choose a teammate to heal or buff!", true);
+    highlightFriendlyHeroes();
+  } else {
+    targetFriendly = false;
+    showBattleAnnouncement("✨ Choose an enemy for Special Attack!", true);
+    highlightAttackableEnemies();
+  }
 }
+
 
 function playerUltimate(heroIndex) {
   if (heroIndex !== activeHeroIndex) {
-    alert("Not your turn! Wait for your hero's turn.");
+    showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
 
   const hero = selectedHeroes[heroIndex];
   if (hero.ultimate.used) {
-    alert("Ultimate already used!");
+    showCustomPopup("Ultimate already used!");
     return;
   }
 
   awaitingTarget = true;
+  highlightAttackableEnemies();
   pendingHeroIndex = heroIndex;
   pendingAttackType = "ultimate";
 
-  showBattleAnnouncement("💥 Choose an enemy for Ultimate!");
+  showBattleAnnouncement("💥 Choose an enemy for Ultimate!", true);
+}
+function highlightAttackableEnemies() {
+  enemies.forEach((enemy, index) => {
+    const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${index + 1})`);
+    if (enemyCard && enemy.hp > 0) {
+      enemyCard.classList.add('glow-attackable');
+    }
+  });
+}
+
+function clearHighlightAttackableEnemies() {
+  document.querySelectorAll('#enemy-field .character-card').forEach(card => {
+    card.classList.remove('glow-attackable');
+  });
 }
 
 
@@ -1304,15 +1399,15 @@ function updateHealthBars() {
 }
 function playerAttack(heroIndex) {
   if (heroIndex !== activeHeroIndex) {
-    alert("Not your turn! Wait for your hero's turn.");
+    showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
-
   awaitingTarget = true;
+  highlightAttackableEnemies();
   pendingHeroIndex = heroIndex;
   pendingAttackType = "normal";
 
-  showBattleAnnouncement("🛡️ Choose an enemy to attack!");
+  showBattleAnnouncement("🛡️ Choose an enemy to attack!", true);
 }
 
 function handleVictory(level) {
@@ -1497,7 +1592,7 @@ document.querySelectorAll('.character-card').forEach(card => {
 
 // Highlight the active enemy
 const enemyCards = document.querySelectorAll('#enemy-field .character-card');
-const attackerIndex = enemies.indexOf(attacker);
+const attackerIndex = enemies.findIndex(e => e.name === attacker.name && e.hp === attacker.hp && e.image === attacker.image);
 if (enemyCards[attackerIndex]) {
   enemyCards[attackerIndex].classList.add('active-character');
 }
@@ -1570,6 +1665,15 @@ function showBattleAnnouncement(message, skipUpdate = false) {
   }
 }
 
+function showCustomPopup(message) {
+  const popup = document.getElementById('custom-popup');
+  document.getElementById('popup-message').innerText = message;
+  popup.style.display = 'block';
+}
+
+function closeCustomPopup() {
+  document.getElementById('custom-popup').style.display = 'none';
+}
 
 function playElephantStampede() {
   const elephant = document.createElement('div');
