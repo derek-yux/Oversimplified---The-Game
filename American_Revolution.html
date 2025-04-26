@@ -500,11 +500,16 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     ],
     special: {
       name: "Elephant Charge",
+      type: "damage", // 🔥 NEW
+  target: "enemy",
       damage: 100,
       description: "🐘 Deal medium damage and stomp the enemy!"
     },
     ultimate: {
       name: "March Over the Alps",
+      type: "damage_team",
+  target: "enemy_team",
+  damage: 500,
       description: "🐘 Crush enemies for 500 damage after 4 turns!",
       condition: "4_turns_wait",
       used: false
@@ -527,6 +532,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     ],
     special: {
       name: "Battle Cry",
+      type: "buff",
+  target: "ally_team",
       buff: { attackBoost: 10 },
       description: "🗣️ Boost entire team's attack by 10!"
     },
@@ -554,6 +561,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     ],
     special: {
       name: "Mystic Heal",
+      type: "heal",
+  target: "ally",
       heal: 80,
       description: "✨ Heal a teammate for 80 HP!"
     },
@@ -1002,40 +1011,34 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     return;
   }
 
-  if (hero.name === "Grigori Rasputin") {
+  if (hero.special.type === "heal") {
     ally.hp = Math.min(ally.maxHp, ally.hp + hero.special.heal);
-    showBattleAnnouncement(`✨ Rasputin heals ${ally.name}!`);
-  } else if (hero.name === "Winston Churchill") {
+    showBattleAnnouncement(`${hero.name} heals ${ally.name} with ${hero.special.name}!`);
+  } 
+  else if (hero.special.type === "buff") {
     selectedHeroes.forEach(h => {
       h.attack += hero.special.buff.attackBoost;
     });
-    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
+    showBattleAnnouncement(`${hero.name} uses ${hero.special.name} to boost the team!`);
   }
 
   updateHealthBars();
   endTurn();
 }
 
+
 function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
   const hero = selectedHeroes[heroIndex];
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    showCustomPopup("This enemy has already been defeated!");
+    showCustomPopup("This enemy is already defeated!");
     return;
   }
 
-  if (hero.name === "Hannibal Barca") {
+  if (hero.special.type === "damage") {
     target.hp -= hero.special.damage;
-    showBattleAnnouncement("🐘 Hannibal charges the enemy!");
-  } else if (hero.name === "Winston Churchill") {
-    selectedHeroes.forEach(h => {
-      h.attack += hero.special.buff.attackBoost;
-    });
-    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
-  } else if (hero.name === "Grigori Rasputin") {
-    hero.hp = Math.min(hero.maxHp, hero.hp + hero.special.heal);
-    showBattleAnnouncement("✨ Rasputin mystically heals himself!");
+    showBattleAnnouncement(`${hero.name} uses ${hero.special.name}!`);
   }
 
   updateHealthBars();
@@ -1069,6 +1072,7 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
 
 function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
   const hero = selectedHeroes[heroIndex];
+
   if (hero.ultimate.used) {
     showCustomPopup("Ultimate already used!");
     return;
@@ -1077,23 +1081,19 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
-    showCustomPopup("This enemy has already been defeated!");
+    showCustomPopup("This enemy is already defeated!");
     return;
   }
 
-  if (hero.name === "Hannibal Barca" && currentTurnIndex >= 4) {
-    playElephantStampede();
-    enemies.forEach(e => e.hp -= 500);
-    showBattleAnnouncement("🐘 Hannibal's March Over the Alps!!");
-  } else if (hero.name === "Winston Churchill") {
-    playShieldWave();
-    selectedHeroes.forEach(h => {
-      h.defenseBoost = 20;
+  if (hero.ultimate.type === "damage_team") {
+    enemies.forEach(e => {
+      e.hp -= hero.ultimate.damage;
     });
-    showBattleAnnouncement("🛡️ Churchill's Iron Will! Defense boosted!");
-  } else {
-    showCustomPopup("⏳ Ultimate not ready yet!");
-    return;
+    showBattleAnnouncement(`${hero.name} unleashes ${hero.ultimate.name}!`);
+  }
+  else if (hero.ultimate.type === "damage") {
+    target.hp -= hero.ultimate.damage;
+    showBattleAnnouncement(`${hero.name} uses ${hero.ultimate.name} on ${target.name}!`);
   }
 
   hero.ultimate.used = true;
