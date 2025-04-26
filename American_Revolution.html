@@ -160,6 +160,18 @@
   0% { box-shadow: 0 0 5px #17BEBB; }
   100% { box-shadow: 0 0 20px #17BEBB; }
 }
+.status-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 28px;
+  height: 28px;
+  z-index: 5;
+}
+
+.character-card {
+  position: relative; /* Needed for absolute positioning inside */
+}
 
 .dead-enemy {
   filter: grayscale(100%) brightness(0.5);
@@ -574,17 +586,29 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     }
   },
   {
-    id: 4,
-    name: "Napoleon Bonaparte",
-    image: "images/heroes/napoleon.png",
-    hp: 420,
-    maxHp: 420,
-    attack: 55,
-    special: { name: "Short King Power", description: "Next attack deals double damage." },
-    ultimate: { name: "Grande Armée Stampede", description: "Summon a giant army — deals 400 team-wide damage." },
-    attackLines: ["Size doesn't matter!", "Charge!"],
-    hurtLines: ["Retreat... tactically!", "I'll be back!"]
+  id: 4,
+  name: "Napoleon Bonaparte",
+  image: "images/heroes/napoleon.png",
+  hp: 420,
+  maxHp: 420,
+  attack: 55,
+  special: {
+    name: "Short King Power",
+    type: "buff",
+    target: "self",
+    effect: "double_next_attack",
+    description: "Next attack deals double damage."
   },
+  ultimate: {
+    name: "Grande Armée Stampede",
+    type: "damage_team",
+    target: "enemy_team",
+    damage: 400,
+    description: "Summon a giant army — deals 400 team-wide damage."
+  },
+  attackLines: ["Size doesn't matter!", "Charge!"],
+  hurtLines: ["Retreat... tactically!", "I'll be back!"]
+},
   {
     id: 5,
     name: "King Louis XVI",
@@ -592,8 +616,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     hp: 350,
     maxHp: 350,
     attack: 35,
-    special: { name: "Royal Taxation", description: "Drain 20 HP from all enemies." },
-    ultimate: { name: "Let Them Eat Cake", description: "Stun all enemies for 1 turn while they feast." },
+    special: { name: "Royal Taxation", description: "Drain 20 HP from all enemies.", type: "damage_team", target: "enemy_team", drain: 20 },
+    ultimate: { name: "Let Them Eat Cake", description: "Stun all enemies for 1 turn while they feast.", type: "stun_team", target: "enemy_team", duration: 1 },
     attackLines: ["Tax them all!", "Cake solves everything!"],
     hurtLines: ["Uncool, dude!", "Is my head still attached?"]
   },
@@ -604,8 +628,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     hp: 470,
     maxHp: 470,
     attack: 50,
-    special: { name: "Realpolitik", description: "Steal a buff from an enemy." },
-    ultimate: { name: "Unification Strike", description: "Massive 600 damage combo from all German states." },
+    special: { name: "Realpolitik", description: "Steal a buff from an enemy.", type: "steal_buff", target: "enemy" },
+    ultimate: { name: "Unification Strike", description: "Massive 600 damage combo from all German states.", type: "damage_team", target: "enemy_team", damage: 600 },
     attackLines: ["It’s just pragmatism!", "For Germany!"],
     hurtLines: ["I expected that.", "Tough negotiations."]
   },
@@ -616,8 +640,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     hp: 440,
     maxHp: 440,
     attack: 45,
-    special: { name: "Mustache Twirl", description: "Confuse an enemy (50% miss chance)." },
-    ultimate: { name: "Schlieffen Plan Blitz", description: "Attack 3 random enemies for 300 damage each." },
+    special: { name: "Mustache Twirl", description: "Confuse an enemy (50% miss chance).", type: "debuff", target: "enemy", effect: "confuse", chance: 50 },
+    ultimate: { name: "Schlieffen Plan Blitz", description: "Attack 3 random enemies for 300 damage each.", type: "multi_hit", target: "enemy_random", hits: 3, damage_per_hit: 300 },
     attackLines: ["Mustache power!", "Charge!"],
     hurtLines: ["That's rude!", "Unacceptable!"]
   },
@@ -628,8 +652,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     hp: 400,
     maxHp: 400,
     attack: 40,
-    special: { name: "Romanov Resilience", description: "Small heal and defense buff." },
-    ultimate: { name: "Bloody Sunday", description: "Deal massive morale damage (-30% enemy attack for 3 turns)." },
+    special: { name: "Romanov Resilience", description: "Small heal and defense buff.", type: "heal_buff", target: "self", heal: 50, defenseBoost: 10 },
+    ultimate: { name: "Bloody Sunday", description: "Deal massive morale damage (-30% enemy attack for 3 turns).", type: "debuff_team", target: "enemy_team", effect: "lower_attack", percent: 30, duration: 3 },
     attackLines: ["For Mother Russia!", "The people love me... right?"],
     hurtLines: ["Not again...", "Where’s Rasputin when you need him?"]
   },
@@ -640,8 +664,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 380,
   maxHp: 380,
   attack: 45,
-  special: { name: "Committee of Public Safety", description: "Boost allies' attack by 20% for 2 turns." },
-  ultimate: { name: "Reign of Terror", description: "Inflict bleeding on all enemies (-10% HP per turn for 3 turns)." },
+  special: { name: "Committee of Public Safety", description: "Boost allies' attack by 20% for 2 turns.", type: "buff_team", target: "ally_team", attackBoost: 20, duration: 2 },
+  ultimate: { name: "Reign of Terror", description: "Inflict bleeding on all enemies (-10% HP per turn for 3 turns).", type: "bleed_team", target: "enemy_team", hpLossPercent: 10, duration: 3 },
   attackLines: ["For the Revolution!", "Let the terror commence!"],
   hurtLines: ["I am incorruptible!", "Not even fear can stop me!"]
 },
@@ -652,8 +676,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 450,
   maxHp: 450,
   attack: 40,
-  special: { name: "Taxation Without Representation", description: "Weaken enemy defenses for 3 turns." },
-  ultimate: { name: "Royal Madness", description: "Confuse all enemies (50% miss chance)." },
+  special: { name: "Taxation Without Representation", description: "Weaken enemy defenses for 3 turns.", type: "debuff_team", target: "enemy_team", effect: "lower_defense", duration: 3 },
+  ultimate: { name: "Royal Madness", description: "Confuse all enemies (50% miss chance).", type: "debuff_team", target: "enemy_team", effect: "confuse", chance: 50 },
   attackLines: ["Tax them all!", "Long live the King!"],
   hurtLines: ["Uncool, dude!", "Where’s my crown?"]
 },
@@ -664,8 +688,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 520,
   maxHp: 520,
   attack: 50,
-  special: { name: "Purges", description: "Remove buffs from all enemies." },
-  ultimate: { name: "Five-Year Plan", description: "Massive team buff (+20% attack and defense for 3 turns)." },
+  special: { name: "Purges", description: "Remove buffs from all enemies.", type: "remove_buffs", target: "enemy_team" },
+  ultimate: { name: "Five-Year Plan", description: "Massive team buff (+20% attack and defense for 3 turns).", type: "buff_team", target: "ally_team", attackBoost: 20, defenseBoost: 20, duration: 3 },
   attackLines: ["Victory through strength!", "The party leads!"],
   hurtLines: ["Comrade, this is but a scratch.", "Glory to the Motherland!"]
 },
@@ -676,8 +700,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 400,
   maxHp: 400,
   attack: 55,
-  special: { name: "Blitzkrieg", description: "Deal quick 1.5x damage to a random enemy." },
-  ultimate: { name: "Operation Barbarossa", description: "Heavy damage to multiple enemies but weakens own defense." },
+  special: { name: "Luftwaffe", description: "Deal quick 1.5x damage to a random enemy.", type: "damage", target: "enemy_random", multiplier: 1.5 },
+  ultimate: { name: "BLITZKRIEG", description: "Heavy, fast damage to multiple enemies but weakens own defense.", type: "multi_damage", target: "enemy_team", damage: "heavy", side_effect: "lower_own_defense" },
   attackLines: ["Victory will be ours!", "Onward to glory!"],
   hurtLines: ["They'll pay for this!", "No retreat!"]
 },
@@ -688,8 +712,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 420,
   maxHp: 420,
   attack: 48,
-  special: { name: "Revolutionary Fire", description: "Burn enemies (take 5% extra damage per hit for 2 turns)." },
-  ultimate: { name: "Cuban Missile Crisis", description: "Force enemies to skip a turn out of panic." },
+  special: { name: "They Are All Pigs", description: "Burn enemies (take 5% extra damage per hit for 2 turns).", type: "debuff_team", target: "enemy_team", effect: "burn", damageBoostPercent: 5, duration: 2 },
+  ultimate: { name: "Cuban Missile Crisis", description: "Force enemies to skip a turn out of panic.", type: "stun_team", target: "enemy_team", effect: "panic", duration: 1 },
   attackLines: ["Viva la revolución!", "Cuba will prevail!"],
   hurtLines: ["Still fighting!", "Is that all you've got?"]
 },
@@ -700,8 +724,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 470,
   maxHp: 470,
   attack: 42,
-  special: { name: "Fourteen Points", description: "Heal allies slightly and reduce enemy attack power." },
-  ultimate: { name: "League of Nations", description: "Attempt to stun all enemies (50% success rate)." },
+  special: { name: "Pacifist", description: "Heal allies slightly and reduce enemy attack power.", type: "heal_debuff", target: "both", healAmount: 30, lowerEnemyAttack: 10 },
+  ultimate: { name: "League of Nations", description: "Attempt to stun all enemies (50% success rate).", type: "stun_team_chance", target: "enemy_team", chance: 50 },
   attackLines: ["Peace without victory!", "Let's make the world safe!"],
   hurtLines: ["That's not very peaceful!", "Democracy will endure!"]
 },
@@ -712,8 +736,8 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
   hp: 500,
   maxHp: 500,
   attack: 45,
-  special: { name: "New Deal", description: "Heal team and provide shields." },
-  ultimate: { name: "Arsenal of Democracy", description: "Massively boost team attack and defense for 3 turns." },
+  special: { name: "New Deal", description: "Heal team and provide shields.", type: "heal_buff_team", target: "ally_team", heal: 50, shield: 30 },
+  ultimate: { name: "Arsenal of Democracy", description: "Massively boost team attack and defense for 3 turns.", type: "buff_team", target: "ally_team", attackBoost: 30, defenseBoost: 30, duration: 3 },
   attackLines: ["The only thing to fear is fear itself!", "Victory through unity!"],
   hurtLines: ["This will not deter us!", "The people will endure!"]
 }
@@ -985,6 +1009,13 @@ if (type === 'player') {
     }
   });
 }
+if (type === 'enemy') {
+  const statusImg = document.createElement('img');
+  statusImg.classList.add('status-icon');
+  statusImg.id = `status-icon-${index}`;
+  statusImg.style.display = "none"; // hidden by default
+  card.appendChild(statusImg);
+}
 
   return card;
 }
@@ -1011,15 +1042,42 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     return;
   }
 
-  if (hero.special.type === "heal") {
-    ally.hp = Math.min(ally.maxHp, ally.hp + hero.special.heal);
-    showBattleAnnouncement(`${hero.name} heals ${ally.name} with ${hero.special.name}!`);
-  } 
-  else if (hero.special.type === "buff") {
+  const special = hero.special;
+
+  if (special.type === "heal") {
+    ally.hp = Math.min(ally.maxHp, ally.hp + special.heal);
+    showBattleAnnouncement(`${hero.name} heals ${ally.name} for ${special.heal} HP!`);
+  }
+  else if (special.type === "buff") {
+    ally.attack += special.buff.attackBoost;
+    showBattleAnnouncement(`${hero.name} buffs ${ally.name} with ${special.buff.attackBoost} attack!`);
+  }
+  else if (special.type === "buff_team") {
     selectedHeroes.forEach(h => {
-      h.attack += hero.special.buff.attackBoost;
+      h.attack += special.attackBoost;
     });
-    showBattleAnnouncement(`${hero.name} uses ${hero.special.name} to boost the team!`);
+    showBattleAnnouncement(`${hero.name} buffs the whole team with +${special.attackBoost} attack!`);
+  }
+  else if (special.type === "heal_buff") {
+    ally.hp = Math.min(ally.maxHp, ally.hp + special.heal);
+    ally.defenseBoost = (ally.defenseBoost || 0) + special.defenseBoost;
+    showBattleAnnouncement(`${hero.name} heals and buffs ${ally.name}!`);
+  }
+  else if (special.type === "heal_buff_team") {
+    selectedHeroes.forEach(h => {
+      h.hp = Math.min(h.maxHp, h.hp + special.heal);
+      h.shield = (h.shield || 0) + special.shield;
+    });
+    showBattleAnnouncement(`${hero.name} heals and shields the entire team!`);
+  }
+  else if (special.type === "heal_debuff") {
+    selectedHeroes.forEach(h => {
+      h.hp = Math.min(h.maxHp, h.hp + special.healAmount);
+    });
+    enemies.forEach(e => {
+      e.attack -= special.lowerEnemyAttack;
+    });
+    showBattleAnnouncement(`${hero.name} heals allies and weakens enemies!`);
   }
 
   updateHealthBars();
@@ -1036,9 +1094,24 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
     return;
   }
 
-  if (hero.special.type === "damage") {
-    target.hp -= hero.special.damage;
-    showBattleAnnouncement(`${hero.name} uses ${hero.special.name}!`);
+  const special = hero.special;
+
+  if (special.type === "damage") {
+    target.hp -= special.damage;
+    showBattleAnnouncement(`${hero.name} uses ${special.name} and deals ${special.damage} damage!`);
+  } 
+  else if (special.type === "debuff") {
+    // Example for debuffs like confuse
+    showBattleAnnouncement(`${hero.name} uses ${special.name}! ${target.name} is affected.`);
+  }
+  else if (special.type === "steal_buff") {
+    if (target.buff) {
+      hero.buff = target.buff;
+      delete target.buff;
+      showBattleAnnouncement(`${hero.name} steals a buff from ${target.name}!`);
+    } else {
+      showBattleAnnouncement(`${hero.name} tries to steal but ${target.name} has no buffs!`);
+    }
   }
 
   updateHealthBars();
@@ -1079,21 +1152,73 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
   }
 
   const target = enemies[enemyIndex];
+  const ultimate = hero.ultimate;
 
   if (!target || target.hp <= 0) {
     showCustomPopup("This enemy is already defeated!");
     return;
   }
 
-  if (hero.ultimate.type === "damage_team") {
+  if (ultimate.type === "damage_team") {
     enemies.forEach(e => {
-      e.hp -= hero.ultimate.damage;
+      e.hp -= ultimate.damage;
     });
-    showBattleAnnouncement(`${hero.name} unleashes ${hero.ultimate.name}!`);
+    showBattleAnnouncement(`${hero.name} unleashes ${ultimate.name} on all enemies!`);
   }
-  else if (hero.ultimate.type === "damage") {
-    target.hp -= hero.ultimate.damage;
-    showBattleAnnouncement(`${hero.name} uses ${hero.ultimate.name} on ${target.name}!`);
+  else if (ultimate.type === "damage") {
+    target.hp -= ultimate.damage;
+    showBattleAnnouncement(`${hero.name} uses ${ultimate.name} and deals ${ultimate.damage} damage to ${target.name}!`);
+  }
+  else if (ultimate.type === "buff_team") {
+    selectedHeroes.forEach(h => {
+      h.attack += ultimate.attackBoost;
+      h.defenseBoost = (h.defenseBoost || 0) + ultimate.defenseBoost;
+    });
+    showBattleAnnouncement(`${hero.name} empowers the team with ${ultimate.attackBoost} attack and ${ultimate.defenseBoost} defense!`);
+  }
+  else if (ultimate.type === "debuff_team") {
+    enemies.forEach(e => {
+      e.attack -= (ultimate.percent || 0);
+      e.status = ultimate.effect;
+    });
+    showBattleAnnouncement(`${hero.name} debuffs the entire enemy team!`);
+  }
+  else if (ultimate.type === "stun_team") {
+    enemies.forEach(e => {
+      e.status = "stunned";
+    });
+    showBattleAnnouncement(`${hero.name} stuns the enemy team!`);
+  }
+  else if (ultimate.type === "bleed_team") {
+    enemies.forEach(e => {
+      e.status = "bleeding";
+    });
+    showBattleAnnouncement(`${hero.name} inflicts bleeding on all enemies!`);
+  }
+  else if (ultimate.type === "multi_hit") {
+    for (let i = 0; i < ultimate.hits; i++) {
+      const aliveEnemies = enemies.filter(e => e.hp > 0);
+      if (aliveEnemies.length === 0) break;
+      const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+      randomEnemy.hp -= ultimate.damage_per_hit;
+    }
+    showBattleAnnouncement(`${hero.name} strikes multiple enemies with ${ultimate.name}!`);
+  }
+  else if (ultimate.type === "multi_damage") {
+    enemies.forEach(e => {
+      e.hp -= 100; // heavy damage to all (you can customize)
+    });
+    const attacker = selectedHeroes[heroIndex];
+    attacker.defenseBoost = (attacker.defenseBoost || 0) - 20; // lose some defense
+    showBattleAnnouncement(`${hero.name} blitzes all enemies but sacrifices defense!`);
+  }
+  else if (ultimate.type === "stun_team_chance") {
+    enemies.forEach(e => {
+      if (Math.random() * 100 < ultimate.chance) {
+        e.status = "stunned";
+      }
+    });
+    showBattleAnnouncement(`${hero.name} tries to stun the enemy team!`);
   }
 
   hero.ultimate.used = true;
@@ -1277,7 +1402,7 @@ function playerSpecial(heroIndex) {
   pendingAttackType = "special";
 
   // Check if this special should target friendly
-  if (hero.name === "Grigori Rasputin" || hero.name === "Winston Churchill") {
+  if (hero.special.target === "ally" || hero.special.target === "ally_team" || hero.special.target === "self") {
     targetFriendly = true;
     showBattleAnnouncement("✨ Choose a teammate to heal or buff!", true);
     highlightFriendlyHeroes();
@@ -1388,15 +1513,36 @@ function updateHealthBars() {
     updateHealthBar('enemy', i, enemy.hp, enemy.maxHp);
 
     const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${i + 1})`);
-    if (enemyCard) {
+    const statusIcon = document.getElementById(`status-icon-${i}`);
+
+    if (enemyCard && statusIcon) {
       if (enemy.hp <= 0) {
         enemyCard.classList.add('dead-enemy');
+        statusIcon.style.display = "none"; // dead enemies have no status icons
       } else {
         enemyCard.classList.remove('dead-enemy');
+
+        // Show correct status icon
+        if (enemy.status === "bleeding") {
+          statusIcon.src = "images/status/bleed.png"; // 🩸 Bleeding icon
+          statusIcon.style.display = "block";
+        }
+        else if (enemy.status === "stunned") {
+          statusIcon.src = "images/status/stun.png"; // 🌟 Stunned icon
+          statusIcon.style.display = "block";
+        }
+        else if (enemy.status === "confuse") {
+          statusIcon.src = "images/status/confuse.png"; // 🔄 Confused icon
+          statusIcon.style.display = "block";
+        }
+        else {
+          statusIcon.style.display = "none"; // No status
+        }
       }
     }
   });
 }
+
 function playerAttack(heroIndex) {
   if (heroIndex !== activeHeroIndex) {
     showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
@@ -1580,49 +1726,57 @@ if (playerCards[activeHeroIndex]) {
 
 function enemyTurn() {
   const aliveHeroes = selectedHeroes.filter(h => h.hp > 0);
-  const targetIndex = Math.floor(Math.random() * aliveHeroes.length);
-  const targetHero = aliveHeroes[targetIndex];
-
   const aliveEnemies = enemies.filter(e => e.hp > 0);
+
+  if (aliveEnemies.length === 0) {
+    handleVictory(1);
+    return;
+  }
+
   const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+
   // Clear previous active highlights
-document.querySelectorAll('.character-card').forEach(card => {
-  card.classList.remove('active-character');
-});
+  document.querySelectorAll('.character-card').forEach(card => {
+    card.classList.remove('active-character');
+  });
 
-// Highlight the active enemy
-const enemyCards = document.querySelectorAll('#enemy-field .character-card');
-const attackerIndex = enemies.findIndex(e => e.name === attacker.name && e.hp === attacker.hp && e.image === attacker.image);
-if (enemyCards[attackerIndex]) {
-  enemyCards[attackerIndex].classList.add('active-character');
-}
-
-
-
-  // 🛠 Boss says attack line if available
-  if (attacker.attackLines) {
-    const randomBossLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
-    showFloatingLine(randomBossLine, "enemy", 0);
+  const enemyCards = document.querySelectorAll('#enemy-field .character-card');
+  const attackerIndex = enemies.findIndex(e => e.name === attacker.name && e.hp === attacker.hp && e.image === attacker.image);
+  if (enemyCards[attackerIndex]) {
+    enemyCards[attackerIndex].classList.add('active-character');
   }
 
-  // Attack animation
-  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(1) .character-image`);
-  if (enemyCard) {
-    enemyCard.classList.add('attack-animation');
-    setTimeout(() => {
-      enemyCard.classList.remove('attack-animation');
-    }, 500);
+  // ✨ APPLY STATUS EFFECTS FIRST
+  if (attacker.status === "bleeding") {
+    attacker.hp -= Math.floor(attacker.maxHp * 0.05); // 5% bleed per turn
+    showBattleAnnouncement(`${attacker.name} suffers from bleeding!`);
+    if (attacker.hp <= 0) {
+      attacker.hp = 0;
+      updateHealthBars();
+      setTimeout(endTurn, 800); 
+      return;
+    }
   }
 
-  // Damage to hero
-  let damage = 30;
-  if (targetHero.defenseBoost) {
-    damage = Math.max(10, damage - targetHero.defenseBoost);
+  if (attacker.status === "stunned") {
+    showBattleAnnouncement(`${attacker.name} is stunned and cannot move!`);
+    updateHealthBars();
+    setTimeout(endTurn, 800);
+    return;
   }
-  targetHero.hp -= damage;
 
-  // Hero hurt reaction
-  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1}) .character-image`);
+  let targetHero = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
+
+  if (attacker.status === "confuse" && Math.random() < 0.5) {
+    // 50% chance to attack self instead
+    targetHero = attacker;
+    showBattleAnnouncement(`${attacker.name} is confused and attacks themselves!`);
+  }
+
+  // Normal Attack Flow
+  const heroCard = (targetHero === attacker) ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1}) .character-image`) 
+                                             : document.querySelector(`#player-team .character-card:nth-child(${selectedHeroes.indexOf(targetHero) + 1}) .character-image`);
+
   if (heroCard) {
     setTimeout(() => {
       heroCard.classList.add('hit-animation');
@@ -1632,15 +1786,23 @@ if (enemyCards[attackerIndex]) {
     }, 200);
   }
 
+  // Deal damage
+  let damage = 30;
+  if (targetHero.defenseBoost) {
+    damage = Math.max(10, damage - targetHero.defenseBoost);
+  }
+  targetHero.hp -= damage;
+
   setTimeout(() => {
-    if (targetHero.hurtLines) {
+    if (targetHero.hurtLines && targetHero !== attacker) {
       const randomHurtLine = targetHero.hurtLines[Math.floor(Math.random() * targetHero.hurtLines.length)];
-      showFloatingLine(randomHurtLine, "player", targetIndex);
+      showFloatingLine(randomHurtLine, "player", selectedHeroes.indexOf(targetHero));
     }
   }, 400);
 
   updateHealthBars();
 
+  // Special Rasputin revive
   if (targetHero.hp <= 0 && targetHero.name === "Grigori Rasputin" && !targetHero.ultimate.used) {
     playMysticGlow();
     targetHero.hp = targetHero.maxHp / 2;
