@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Time Rhetoric Duel - American Revolution</title>
+  <style>
+    body {
+      font-family: "Arial Rounded MT Bold", Arial, sans-serif;
+      background: #f0e6d2;
+      color: #333;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #E53D00;
+      font-size: 2.5em;
+    }
+
+    .question-box {
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 30px;
+      margin-top: 30px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .options {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .option {
+      background-color: #2E282A;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .option:hover {
+      background-color: #17BEBB;
+    }
+
+    .stats {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+
+    .patriot-bar {
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .patriot-fill {
+      height: 100%;
+      width: 50%;
+      background-color: #F0C808;
+      transition: width 0.3s;
+    }
+
+    .timer {
+      font-size: 1.5em;
+      color: #E53D00;
+      margin-top: 10px;
+    }
+    #hero-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.hero-card {
+  width: 180px;
+  background-color: #FFD93D;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+  text-align: center;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.hero-card:hover {
+  transform: scale(1.05);
+}
+
+.hero-card.locked {
+  background-color: #ccc;
+  filter: grayscale(100%);
+  pointer-events: none;
+}
+
+.hero-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+}
+
+.selected {
+  border: 4px solid #3B7DDD;
+}
+
+#confirm-heroes {
+  margin-top: 20px;
+  padding: 12px 30px;
+  font-size: 1.2em;
+  background: #FF4D4D;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.victory-banner {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: radial-gradient(circle at center, #FFD700, #FF4D4D);
+  color: white;
+  font-family: 'Fredoka', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  z-index: 99999;
+  animation: fadeIn 1s ease-out;
+}
+@keyframes bossEntrance {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes flipInNew {
+    0% {
+        transform: translate(-50%, -50%) rotateY(90deg);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotateY(0deg);
+        opacity: 1;
+    }
+}
+
+.boss-arriving {
+  animation: bossEntrance 1s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+#confirm-heroes.disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+    .result {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 30px;
+    }
+
+    .hidden {
+      display: none;
+    }
+    @keyframes pulseNext {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+#next-button {
+  animation: pulseNext 2s infinite;
+  z-index: 1000;
+}
+#victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 223, 0, 0.7) 0%, rgba(255, 215, 0, 0.3) 40%, rgba(255, 215, 0, 0) 70%);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: victoryFade 2s ease forwards;
+}
+
+@keyframes victoryFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+#battle-arena {
+  background-color: #fdf6e3;
+  padding: 20px;
+  font-family: 'Fredoka', sans-serif;
+}
+@keyframes elephantStampede {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(150%); }
+}
+
+@keyframes shieldWave {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes mysticGlow {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@keyframes attackMove {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes hitShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+  75% { transform: translateX(-10px); }
+  100% { transform: translateX(0); }
+}
+
+/* These classes apply the animations */
+.attack-animation {
+  animation: attackMove 0.5s ease;
+}
+.glowing-ultimate {
+  animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px gold, 0 0 10px gold;
+  }
+  100% {
+    box-shadow: 0 0 20px orange, 0 0 30px orange;
+  }
+}
+
+.hit-animation {
+  animation: hitShake 0.5s ease;
+}
+
+.elephant {
+  font-size: 80px;
+  position: absolute;
+  top: 30%;
+  animation: elephantStampede 2s linear forwards;
+  z-index: 9999;
+}
+
+.shield {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, #00f, #3B7DDD);
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: shieldWave 2s ease-out forwards;
+  z-index: 9999;
+}
+
+.glow {
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, #ff69b4, #800080);
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: mysticGlow 2s ease-out forwards;
+  z-index: 9999;
+}
+
+#enemy-field, #player-team {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.character-card {
+  background: #ffe066;
+  border-radius: 15px;
+  padding: 10px;
+  width: 150px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  position: relative;
+}
+.character-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+.character-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+#boss-cutscene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  color: white;
+  font-size: 2em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  
+  /* Key parts */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.health-bar {
+  height: 10px;
+  background: red;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+.health-bar-fill {
+  height: 100%;
+  background: limegreen;
+  border-radius: 5px;
+  transition: width 0.3s;
+}
+
+.battle-button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  background: #3B7DDD;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.battle-button:hover {
+  background: #2a5fb3;
+}
+#tooltip {
+  position: absolute;
+  padding: 10px;
+  background: #fff3cd;
+  color: #000;
+  border: 2px solid #ffca28;
+  border-radius: 8px;
+  font-size: 0.9em;
+  max-width: 200px;
+  z-index: 10000;
+  pointer-events: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: opacity 0.2s;
+}
+
+.hidden {
+  display: none;
+}
+
+  </style>
+</head>
+<body>
+    <div id="victory-overlay" style="display:none;">
+    </div>    
+    <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
+      
+  <h1>Rhetoric Duel: American Revolution 🇺🇸</h1>
+  <div id="hero-select-screen" class="hidden">
+    <h2>Pick 3 Heroes!</h2>
+    <div id="hero-list"></div>
+    <button id="confirm-heroes" class="disabled" disabled>Confirm Team</button>
+  </div>  
+  <div id="battle-arena" class="hidden">
+    <div id="enemy-field">
+      <!-- Enemy characters go here -->
+    </div>
+  
+    <div id="battle-status-bar">
+      <div id="turn-counter" style="font-size: 1.2em; margin-top: 5px;">Turn 1</div>
+      <h3 id="turn-indicator">Your Turn</h3>
+    </div>
+    <div id="tooltip" class="hidden"></div>
+
+    <div id="player-team">
+      <!-- Player heroes + action buttons -->
+    </div>
+  </div>
+  <div class="stats">
+    Patriot Points: <span id="patriot-score">50</span>/100
+    <div class="patriot-bar">
+      <div class="patriot-fill" id="patriot-fill"></div>
+    </div>
+    <div class="timer">⏱️ Time: <span id="time-left">30</span>s</div>
+  </div>
+
+  <div class="question-box" id="question-box">
+    <div id="question-text">Loading debate...</div>
+    <div class="options" id="options"></div>
+  </div>
+
+  <div class="result hidden" id="result"></div>
+  <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
+    Next!
+  </button>  
+
+  <script>
+    const allHeroes = [
+  {
+    id: 1,
+    name: "Hannibal Barca",
+    image: "images/heroes/hannibal.png",
+    hp: 400,
+    maxHp: 400,
+    attack: 50,
+    attackLines: [
+      "Forward! For Carthage!",
+      "No mountain can stop me!"
+    ],
+    hurtLines: [
+      "An elephant stepped on me...",
+      "They'll pay for that!"
+    ],
+    special: {
+      name: "Elephant Charge",
+      damage: 100,
+      description: "🐘 Deal medium damage and stomp the enemy!"
+    },
+    ultimate: {
+      name: "March Over the Alps",
+      description: "🐘 Crush enemies for 500 damage after 4 turns!",
+      condition: "4_turns_wait",
+      used: false
+    }
+  },
+  {
+    id: 2,
+    name: "Winston Churchill",
+    image: "images/heroes/churchill.png",
+    hp: 500,
+    maxHp: 500,
+    attack: 40,
+    attackLines: [
+      "We shall fight them on the beaches!",
+      "Never surrender!"
+    ],
+    hurtLines: [
+      "That's a minor setback!",
+      "Cigar... still intact!"
+    ],
+    special: {
+      name: "Battle Cry",
+      buff: { attackBoost: 10 },
+      description: "🗣️ Boost entire team's attack by 10!"
+    },
+    ultimate: {
+      name: "Iron Will",
+      description: "🛡️ Instantly boost defense massively for 5 turns!",
+      condition: "usable_anytime",
+      used: false
+    }
+  },
+  {
+    id: 3,
+    name: "Grigori Rasputin",
+    image: "images/heroes/rasputin.png",
+    hp: 350,
+    maxHp: 350,
+    attack: 45,
+    attackLines: [
+      "You can't kill me that easily!",
+      "The mystic arts are with me!"
+    ],
+    hurtLines: [
+      "Is that all you've got?",
+      "Another stab? Yawn."
+    ],
+    special: {
+      name: "Mystic Heal",
+      heal: 80,
+      description: "✨ Heal a teammate for 80 HP!"
+    },
+    ultimate: {
+      name: "Unkillable",
+      description: "🔮 Revive once with 50% HP upon death!",
+      condition: "on_death",
+      used: false
+    }
+  },
+  {
+    id: 4,
+    name: "Napoleon Bonaparte",
+    image: "images/heroes/napoleon.png",
+    hp: 420,
+    maxHp: 420,
+    attack: 55,
+    special: { name: "Short King Power", description: "Next attack deals double damage." },
+    ultimate: { name: "Grande Armée Stampede", description: "Summon a giant army — deals 400 team-wide damage." },
+    attackLines: ["Size doesn't matter!", "Charge!"],
+    hurtLines: ["Retreat... tactically!", "I'll be back!"]
+  },
+  {
+    id: 5,
+    name: "King Louis XVI",
+    image: "images/heroes/louisxvi.webp",
+    hp: 350,
+    maxHp: 350,
+    attack: 35,
+    special: { name: "Royal Taxation", description: "Drain 20 HP from all enemies." },
+    ultimate: { name: "Let Them Eat Cake", description: "Stun all enemies for 1 turn while they feast." },
+    attackLines: ["Tax them all!", "Cake solves everything!"],
+    hurtLines: ["Uncool, dude!", "Is my head still attached?"]
+  },
+  {
+    id: 6,
+    name: "Otto von Bismarck",
+    image: "images/heroes/bismarck.png",
+    hp: 470,
+    maxHp: 470,
+    attack: 50,
+    special: { name: "Realpolitik", description: "Steal a buff from an enemy." },
+    ultimate: { name: "Unification Strike", description: "Massive 600 damage combo from all German states." },
+    attackLines: ["It’s just pragmatism!", "For Germany!"],
+    hurtLines: ["I expected that.", "Tough negotiations."]
+  },
+  {
+    id: 7,
+    name: "Kaiser Wilhelm II",
+    image: "images/heroes/kaiser.png",
+    hp: 440,
+    maxHp: 440,
+    attack: 45,
+    special: { name: "Mustache Twirl", description: "Confuse an enemy (50% miss chance)." },
+    ultimate: { name: "Schlieffen Plan Blitz", description: "Attack 3 random enemies for 300 damage each." },
+    attackLines: ["Mustache power!", "Charge!"],
+    hurtLines: ["That's rude!", "Unacceptable!"]
+  },
+  {
+    id: 8,
+    name: "Tsar Nicholas II",
+    image: "images/heroes/tsar.png",
+    hp: 400,
+    maxHp: 400,
+    attack: 40,
+    special: { name: "Romanov Resilience", description: "Small heal and defense buff." },
+    ultimate: { name: "Bloody Sunday", description: "Deal massive morale damage (-30% enemy attack for 3 turns)." },
+    attackLines: ["For Mother Russia!", "The people love me... right?"],
+    hurtLines: ["Not again...", "Where’s Rasputin when you need him?"]
+  },
+  {
+  id: 9,
+  name: "Robespierre",
+  image: "images/heroes/robespierre.png",
+  hp: 380,
+  maxHp: 380,
+  attack: 45,
+  special: { name: "Committee of Public Safety", description: "Boost allies' attack by 20% for 2 turns." },
+  ultimate: { name: "Reign of Terror", description: "Inflict bleeding on all enemies (-10% HP per turn for 3 turns)." },
+  attackLines: ["For the Revolution!", "Let the terror commence!"],
+  hurtLines: ["I am incorruptible!", "Not even fear can stop me!"]
+},
+{
+  id: 10,
+  name: "King George III",
+  image: "images/bosses/kinggeorge.png",
+  hp: 450,
+  maxHp: 450,
+  attack: 40,
+  special: { name: "Taxation Without Representation", description: "Weaken enemy defenses for 3 turns." },
+  ultimate: { name: "Royal Madness", description: "Confuse all enemies (50% miss chance)." },
+  attackLines: ["Tax them all!", "Long live the King!"],
+  hurtLines: ["Uncool, dude!", "Where’s my crown?"]
+},
+{
+  id: 11,
+  name: "Joseph Stalin",
+  image: "images/heroes/stalin.png",
+  hp: 520,
+  maxHp: 520,
+  attack: 50,
+  special: { name: "Purges", description: "Remove buffs from all enemies." },
+  ultimate: { name: "Five-Year Plan", description: "Massive team buff (+20% attack and defense for 3 turns)." },
+  attackLines: ["Victory through strength!", "The party leads!"],
+  hurtLines: ["Comrade, this is but a scratch.", "Glory to the Motherland!"]
+},
+{
+  id: 12,
+  name: "Hitler",
+  image: "images/heroes/hitler.png",
+  hp: 400,
+  maxHp: 400,
+  attack: 55,
+  special: { name: "Blitzkrieg", description: "Deal quick 1.5x damage to a random enemy." },
+  ultimate: { name: "Operation Barbarossa", description: "Heavy damage to multiple enemies but weakens own defense." },
+  attackLines: ["Victory will be ours!", "Onward to glory!"],
+  hurtLines: ["They'll pay for this!", "No retreat!"]
+},
+{
+  id: 13,
+  name: "Fidel Castro",
+  image: "images/heroes/castro.png",
+  hp: 420,
+  maxHp: 420,
+  attack: 48,
+  special: { name: "Revolutionary Fire", description: "Burn enemies (take 5% extra damage per hit for 2 turns)." },
+  ultimate: { name: "Cuban Missile Crisis", description: "Force enemies to skip a turn out of panic." },
+  attackLines: ["Viva la revolución!", "Cuba will prevail!"],
+  hurtLines: ["Still fighting!", "Is that all you've got?"]
+},
+{
+  id: 14,
+  name: "Woodrow Wilson",
+  image: "images/heroes/wilson.png",
+  hp: 470,
+  maxHp: 470,
+  attack: 42,
+  special: { name: "Fourteen Points", description: "Heal allies slightly and reduce enemy attack power." },
+  ultimate: { name: "League of Nations", description: "Attempt to stun all enemies (50% success rate)." },
+  attackLines: ["Peace without victory!", "Let's make the world safe!"],
+  hurtLines: ["That's not very peaceful!", "Democracy will endure!"]
+},
+{
+  id: 15,
+  name: "Franklin D. Roosevelt",
+  image: "images/heroes/fdr.png",
+  hp: 500,
+  maxHp: 500,
+  attack: 45,
+  special: { name: "New Deal", description: "Heal team and provide shields." },
+  ultimate: { name: "Arsenal of Democracy", description: "Massively boost team attack and defense for 3 turns." },
+  attackLines: ["The only thing to fear is fear itself!", "Victory through unity!"],
+  hurtLines: ["This will not deter us!", "The people will endure!"]
+}
+];
+
+// Load unlocked heroes from localStorage
+let unlockedHeroes = JSON.parse(localStorage.getItem('unlockedHeroes')) || [1, 2, 3]; // Default 3 heroes if none yet
+
+
+const bossTemplates = {
+  "King George III": {
+    name: "King George III",
+    image: "images/bosses/kinggeorge.png",
+    hp: 500,
+    maxHp: 500,
+    attack: 150,
+    attackLines: [
+    "TAX THEM ALL!",
+    "You'll be back!"
+    ],
+    hurtLines: [
+      "How dare you!",
+      "Rebellious scum!"
+    ],
+    special: {
+      name: "TAX THEM ALL!",
+      description: "200 damage to all heroes",
+      turnsCooldown: 3,
+      lastUsed: 0
+    }
+  },
+  "King Louis XVI": {
+    name: "King Louis XVI",
+    hp: 600,
+    maxHp: 600,
+    attack: 60,
+    special: {
+      name: "Royal Decree",
+      description: "Heals self 100 HP",
+      turnsCooldown: 4,
+      lastUsed: 0
+    }
+  }
+  // Add more bosses here!
+};
+
+    const questions = [
+      {
+        prompt: "King George III: You owe us taxes for tea! It's only fair.",
+        correct: "Then stop throwing tea parties with our money!",
+        wrong: ["Long live taxation!", "You're absolutely right, sire.", "Please accept my tea as tribute."]
+      },
+      {
+        prompt: "King George III: How dare you defy the Crown?",
+        correct: "How dare you tax our breakfast drinks?",
+        wrong: ["We're very sorry!", "The Crown is always right.", "Apologies, Your Majesty."]
+      },
+      {
+        prompt: "King George III: You're nothing without us!",
+        correct: "We're everything *despite* you!",
+        wrong: ["Yes, we are nothing.", "Please rule us better.", "We'll think about that."]
+      },
+      {
+        prompt: "King George III: We offer protection!",
+        correct: "From what? Our own independence?",
+        wrong: ["Yes, thank you for protection.", "Keep protecting!", "We'll consider more taxes."]
+      },
+    ];
+
+    let score = 50;
+    let currentIndex = 0;
+    let timer = 30;
+    let interval = null;
+
+    const questionBox = document.getElementById('question-box');
+    const optionsDiv = document.getElementById('options');
+    const questionText = document.getElementById('question-text');
+    const patriotScore = document.getElementById('patriot-score');
+    const patriotFill = document.getElementById('patriot-fill');
+    const timeLeft = document.getElementById('time-left');
+    const resultBox = document.getElementById('result');
+    let soundsEnabled = true; // global variable
+    let currentTurnIndex = 0;
+let isPlayerTurn = true;
+let enemyWave = 1;
+let selectedTeam = []; // ← populated from hero selection
+let enemies = [];
+
+function startBattle(selected) {
+  console.log("Starting Battle!"); // Add debug line
+  selectedTeam = selected;
+  document.getElementById('hero-select-screen').classList.add('hidden');
+  document.getElementById('battle-arena').classList.remove('hidden');
+
+  enemies = generateEnemiesForLevel(1, 1);
+  currentTurnIndex = 0;
+  enemyWave = 1;
+  isPlayerTurn = true;
+
+  renderBattleArena();
+  updateTurn();
+}
+
+
+function renderBattleArena() {
+  document.getElementById('battle-arena').classList.remove('hidden');
+
+  const playerTeamDiv = document.getElementById('player-team');
+  const enemyFieldDiv = document.getElementById('enemy-field');
+
+  playerTeamDiv.innerHTML = '';
+  enemyFieldDiv.innerHTML = '';
+
+  selectedTeam.forEach((hero, index) => {
+    const card = createCharacterCard(hero, 'player', index);
+    playerTeamDiv.appendChild(card);
+  });
+
+  enemies.forEach((enemy, index) => {
+    const card = createCharacterCard(enemy, 'enemy', index);
+    enemyFieldDiv.appendChild(card);
+  });
+}
+
+function createCharacterCard(character, type, index) {
+  const card = document.createElement('div');
+  card.classList.add('character-card');
+  card.innerHTML = `
+    <img src="${character.image}" alt="${character.name}" class="character-image">
+<h4>${character.name}</h4>
+<div class="health-bar">
+  <div class="health-bar-fill" id="${type}-hp-${index}"></div>
+</div>
+
+  `;
+  const img = card.querySelector('.character-image');
+
+// Attach hover events for stats tooltip
+img.addEventListener('mouseenter', (e) => showCharacterTooltip(e, character));
+img.addEventListener('mouseleave', hideTooltip);
+
+  if (type === 'player') {
+  const attackBtn = document.createElement('button');
+  attackBtn.classList.add('battle-button');
+  attackBtn.textContent = "Attack";
+  attackBtn.onclick = () => playerAttack(index);
+
+  // Hover for Attack
+  attackBtn.addEventListener('mouseenter', (e) => showAttackTooltip(e, character));
+  attackBtn.addEventListener('mouseleave', hideTooltip);
+
+  const specialBtn = document.createElement('button');
+  specialBtn.classList.add('battle-button');
+  specialBtn.textContent = "Special";
+  specialBtn.onclick = () => playerSpecial(index);
+
+  // Hover for Special
+  specialBtn.addEventListener('mouseenter', (e) => showSpecialTooltip(e, character));
+  specialBtn.addEventListener('mouseleave', hideTooltip);
+
+  const ultimateBtn = document.createElement('button');
+  ultimateBtn.classList.add('battle-button');
+  ultimateBtn.textContent = "Ultimate";
+  ultimateBtn.onclick = () => playerUltimate(index);
+
+  // Hover for Ultimate
+  ultimateBtn.addEventListener('mouseenter', (e) => showUltimateTooltip(e, character));
+  ultimateBtn.addEventListener('mouseleave', hideTooltip);
+
+  card.appendChild(attackBtn);
+  card.appendChild(specialBtn);
+  card.appendChild(ultimateBtn);
+}
+
+
+
+  return card;
+}
+
+function showCharacterTooltip(event, character) {
+  const tooltip = document.getElementById('tooltip');
+  
+  tooltip.innerHTML = `
+    <strong>${character.name}</strong><br>
+    ❤️ HP: ${Math.max(character.hp, 0)} / ${character.maxHp}<br>
+    🛡️ Defense Boost: ${character.defenseBoost ? character.defenseBoost : 0}
+  `;
+
+  tooltip.style.top = (event.clientY + 20) + 'px';
+  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.classList.remove('hidden');
+}
+
+function showAttackTooltip(event, character) {
+  const tooltip = document.getElementById('tooltip');
+  tooltip.innerHTML = `
+    <strong>Normal Attack</strong><br>
+    Deals ${character.attack} base damage.
+  `;
+  tooltip.style.top = (event.clientY + 20) + 'px';
+  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.classList.remove('hidden');
+}
+
+function showSpecialTooltip(event, character) {
+  const tooltip = document.getElementById('tooltip');
+  tooltip.innerHTML = `
+    <strong>Special Move: ${character.special.name}</strong><br>
+    ${character.special.description}
+  `;
+  tooltip.style.top = (event.clientY + 20) + 'px';
+  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.classList.remove('hidden');
+}
+
+function showUltimateTooltip(event, character) {
+  const tooltip = document.getElementById('tooltip');
+
+  let conditionText = "";
+  if (character.ultimate.condition === "4_turns_wait") {
+    const remaining = Math.max(4 - currentTurnIndex, 0);
+    conditionText = remaining > 0 ? `Available after ${remaining} more turns.` : "Ready now!";
+  } else if (character.ultimate.condition === "low_hp") {
+    conditionText = (character.hp / character.maxHp <= 0.5) ? "Ready now!" : "Useable under 50% HP.";
+  } else if (character.ultimate.condition === "on_death") {
+    conditionText = "Automatically triggers upon death.";
+  } else {
+    conditionText = "Can be used anytime.";
+  }
+
+  tooltip.innerHTML = `
+    <strong>${character.ultimate.name}</strong><br>
+    ${character.ultimate.description}<br>
+    <em>${conditionText}</em>
+  `;
+
+  tooltip.style.top = (event.clientY + 20) + 'px';
+  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.classList.remove('hidden');
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById('tooltip');
+  tooltip.classList.add('hidden');
+}
+document.addEventListener('mousemove', function(e) {
+  const tooltip = document.getElementById('tooltip');
+  if (!tooltip.classList.contains('hidden')) {
+    tooltip.style.top = (e.clientY + 20) + 'px';
+    tooltip.style.left = (e.clientX + 20) + 'px';
+  }
+});
+
+function playerSpecial(heroIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const target = enemies[0]; // Default target
+
+  if (hero.name === "Hannibal Barca") {
+    target.hp -= hero.special.damage;
+    updateHealthBars();
+    endTurn();
+  } else if (hero.name === "Winston Churchill") {
+    selectedHeroes.forEach(h => {
+      h.attack += hero.special.buff.attackBoost;
+    });
+    showBattleAnnouncement("🗣️ Churchill's Battle Cry! Team attack boosted!");
+    endTurn();
+  } else if (hero.name === "Grigori Rasputin") {
+    hero.hp = Math.min(hero.maxHp, hero.hp + hero.special.heal);
+    updateHealthBars();
+    showBattleAnnouncement("✨ Rasputin heals himself!");
+    endTurn();
+  }
+}
+
+function playerUltimate(heroIndex) {
+  const hero = selectedHeroes[heroIndex];
+
+  if (hero.ultimate.used) {
+    alert("Ultimate already used!");
+    return;
+  }
+
+  if (hero.name === "Hannibal Barca" && currentTurnIndex >= 4) {
+    playElephantStampede();
+    enemies.forEach(e => e.hp -= 500);
+    showBattleAnnouncement("🐘 Hannibal's March Over the Alps!!");
+  } else if (hero.name === "Winston Churchill") {
+    playShieldWave();
+    selectedHeroes.forEach(h => {
+      h.defenseBoost = 20;
+    });
+    showBattleAnnouncement("🛡️ Churchill's Iron Will! Defense boosted!");
+  } else {
+    alert("Ultimate not ready yet!");
+    return;
+  }
+
+  hero.ultimate.used = true;
+  updateHealthBars();
+  endTurn();
+}
+
+function showFloatingLine(text, characterType, characterIndex) {
+  const card = document.querySelector(`#${characterType}-team .character-card:nth-child(${characterIndex + 1})`);
+
+  if (!card) return;
+
+  const line = document.createElement('div');
+  line.textContent = text;
+  line.style.position = 'absolute';
+  line.style.top = '-30px'; // slightly above the card
+  line.style.left = '50%';
+  line.style.transform = 'translateX(-50%)';
+  line.style.background = 'white';
+  line.style.color = 'black';
+  line.style.padding = '5px 10px';
+  line.style.borderRadius = '10px';
+  line.style.fontSize = '0.9em';
+  line.style.zIndex = 5;
+  line.style.animation = 'floatUp 2s forwards';
+  line.classList.add('floating-line');
+
+  card.style.position = 'relative'; // make sure the card is the parent reference
+  card.appendChild(line);
+
+  setTimeout(() => {
+    line.remove();
+  }, 2000);
+}
+
+// Add floating text animation
+const styleSheet = document.createElement("style");
+styleSheet.innerHTML = `
+@keyframes floatUp {
+  0% { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, -150px); opacity: 0; }
+}`;
+document.head.appendChild(styleSheet);
+
+function canUseUltimate(hero) {
+  if (hero.ultimate.used) return false;
+
+  if (hero.ultimate.condition === "4_turns_wait") {
+    return currentTurnIndex >= 4;
+  }
+  if (hero.ultimate.condition === "low_hp") {
+    return (hero.hp / hero.maxHp) <= 0.5;
+  }
+  return false;
+}
+
+function updateHealthBar(type, index, current, max) {
+  const fill = document.getElementById(`${type}-hp-${index}`);
+  const percent = Math.max((current / max) * 100, 0);
+  fill.style.width = percent + '%';
+}
+function playerAttack(heroIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const target = enemies[0];
+
+  // 🗣 Hero shouts a random attack line
+  const randomAttackLine = hero.attackLines[Math.floor(Math.random() * hero.attackLines.length)];
+  showFloatingLine(randomAttackLine, "player", heroIndex);
+
+  // Apply attack animation to hero image
+  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${heroIndex + 1}) .character-image`);
+  if (heroCard) {
+    heroCard.classList.add('attack-animation');
+    setTimeout(() => {
+      heroCard.classList.remove('attack-animation');
+    }, 500);
+  }
+
+  // Apply hit animation to enemy image
+  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(1) .character-image`);
+  if (enemyCard) {
+    setTimeout(() => {
+      enemyCard.classList.add('hit-animation');
+      setTimeout(() => {
+        enemyCard.classList.remove('hit-animation');
+      }, 500);
+    }, 200); // small delay to match hero attack animation
+  }
+
+  // 🛡️ Apply damage
+  target.hp -= hero.attack;
+  updateHealthBars();
+
+  // 💥 If enemy dies
+  if (target.hp <= 0) {
+    enemies.splice(0, 1);
+
+    if (enemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+
+        // Show "Boss Approaching" announcement FIRST
+        showBattleAnnouncement("👑 Boss Approaching: King George III!", true);
+
+        setTimeout(() => {
+  showBossCutscene("King George III", () => {
+    enemies = generateEnemiesForLevel(1, 2);
+    renderBattleArena();
+    isPlayerTurn = true;
+    updateTurn();
+  });
+}, 1500);
+
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+        return;
+      }
+    }
+  }
+
+  endTurn();
+}
+function handleVictory(level) {
+  // 1. Create colorful victory banner (full screen)
+  const overlay = document.createElement('div');
+  overlay.classList.add('victory-banner');
+  overlay.id = 'dynamic-victory-banner'; // ← give it an id so we can remove it later
+  overlay.innerHTML = `
+    <h1>🏆 You Won!</h1>
+    <p>Looting a reward from history...</p>
+  `;
+  document.body.appendChild(overlay);
+
+  // 2. Save highest level
+  const highestLevel = parseInt(localStorage.getItem('highestLevelWon') || "1");
+  if (level > highestLevel) {
+    localStorage.setItem('highestLevelWon', level);
+  }
+
+  // 3. Reward player
+  const rewards = JSON.parse(localStorage.getItem('playerRewards')) || [];
+  const newReward = `Historical Artifact Lv.${level}`;
+  rewards.push(newReward);
+  localStorage.setItem('playerRewards', JSON.stringify(rewards));
+
+  // 4. Unlock next hero
+  let unlocked = JSON.parse(localStorage.getItem('unlockedHeroes')) || [1, 2, 3];
+  const allHeroIds = allHeroes.map(h => h.id).sort((a, b) => a - b);
+  const nextHero = allHeroIds.find(id => !unlocked.includes(id));
+
+  if (nextHero) {
+    unlocked.push(nextHero);
+    localStorage.setItem('unlockedHeroes', JSON.stringify(unlocked));
+  }
+
+  // 5. After 3.5 seconds, fade out victory banner, show New Hero card
+  setTimeout(() => {
+    const banner = document.getElementById('dynamic-victory-banner');
+    if (banner) {
+      banner.style.transition = 'opacity 1s ease';
+      banner.style.opacity = '0';
+      setTimeout(() => {
+        banner.remove(); // Remove after faded out
+      }, 1000);
+    }
+
+    if (nextHero) {
+      showNewHeroPopup(nextHero); // 🎉 show collectible unlock
+    }
+
+    // 6. After small delay, show Next button
+    setTimeout(() => {
+      const nextButton = document.getElementById('next-button');
+      nextButton.style.display = 'block';
+      nextButton.onclick = () => {
+        window.location.href = `working.html?levelWon=${level}`;
+      };
+    }, 2500); // wait for hero popup to be seen first
+  }, 3500);
+}
+
+
+function endTurn() {
+  isPlayerTurn = !isPlayerTurn;
+
+  if (isPlayerTurn) {
+    currentTurnIndex++; // 🛠️ Increment turn count only when player regains turn
+    updateTurn();
+  } else {
+    setTimeout(enemyTurn, 1000); // Enemy attacks after short delay
+  }
+}
+function showNewHeroPopup(heroId) {
+  const hero = allHeroes.find(h => h.id === heroId);
+  if (!hero) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'new-hero-banner';
+  banner.style = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotateY(90deg);
+    background: #fff8dc;
+    color: #2E282A;
+    border: 4px solid gold;
+    border-radius: 20px;
+    padding: 30px;
+    width: 300px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    z-index: 10000;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    animation: flipInNew 0.6s ease forwards;
+  `;
+
+  banner.innerHTML = `
+    <h2 style="color: goldenrod;">🎉 New Hero Unlocked!</h2>
+    <img src="${hero.image}" alt="${hero.name}" style="width:100px;height:120px;margin-top:10px;border:3px solid goldenrod;border-radius:10px;">
+    <h3 style="margin-top:10px;">${hero.name}</h3>
+    <p style="margin-top:5px;font-size:0.9em;">✨ Special: ${hero.special?.name || 'Unknown'}</p>
+  `;
+
+  document.body.appendChild(banner);
+
+  setTimeout(() => {
+    banner.remove();
+  }, 2500);
+}
+
+
+function updateTurn() {
+  const turnIndicator = document.getElementById('turn-indicator');
+  const turnCounter = document.getElementById('turn-counter');
+
+  if (isPlayerTurn) {
+  const ultimateButtons = document.querySelectorAll('.battle-button');
+
+  selectedHeroes.forEach((hero, index) => {
+    const ultimateBtn = document.querySelector(`#player-team .character-card:nth-child(${index + 1}) .battle-button:nth-child(3)`);
+
+    if (!ultimateBtn) return;
+
+    if (hero.name === "Hannibal Barca") {
+      if (currentTurnIndex >= 4 && !hero.ultimate.used) {
+        ultimateBtn.classList.add('glowing-ultimate');
+      } else {
+        ultimateBtn.classList.remove('glowing-ultimate');
+      }
+    }
+
+    if (hero.name === "Winston Churchill") {
+      if (!hero.ultimate.used) {
+        ultimateBtn.classList.add('glowing-ultimate');
+      } else {
+        ultimateBtn.classList.remove('glowing-ultimate');
+      }
+    }
+
+    if (hero.name === "Grigori Rasputin") {
+      // His Ultimate auto-triggers, no manual activation
+      ultimateBtn.classList.remove('glowing-ultimate');
+    }
+  });
+} else {
+    turnIndicator.textContent = "🎯 Enemy Turn!";
+  }
+}
+
+function enemyTurn() {
+  const targetIndex = Math.floor(Math.random() * selectedHeroes.length);
+  const targetHero = selectedHeroes[targetIndex];
+  const attacker = enemies[0]; // Always first enemy/boss
+
+  // 🛠 Boss says attack line if available
+  if (attacker.attackLines) {
+    const randomBossLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
+    showFloatingLine(randomBossLine, "enemy", 0);
+  }
+
+  // Attack animation
+  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(1) .character-image`);
+  if (enemyCard) {
+    enemyCard.classList.add('attack-animation');
+    setTimeout(() => {
+      enemyCard.classList.remove('attack-animation');
+    }, 500);
+  }
+
+  // Damage to hero
+  let damage = 30;
+  if (targetHero.defenseBoost) {
+    damage = Math.max(10, damage - targetHero.defenseBoost);
+  }
+  targetHero.hp -= damage;
+
+  // Hero hurt reaction
+  const heroCard = document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1}) .character-image`);
+  if (heroCard) {
+    setTimeout(() => {
+      heroCard.classList.add('hit-animation');
+      setTimeout(() => {
+        heroCard.classList.remove('hit-animation');
+      }, 500);
+    }, 200);
+  }
+
+  setTimeout(() => {
+    if (targetHero.hurtLines) {
+      const randomHurtLine = targetHero.hurtLines[Math.floor(Math.random() * targetHero.hurtLines.length)];
+      showFloatingLine(randomHurtLine, "player", targetIndex);
+    }
+  }, 400);
+
+  updateHealthBars();
+
+  if (targetHero.hp <= 0 && targetHero.name === "Grigori Rasputin" && !targetHero.ultimate.used) {
+    playMysticGlow();
+    targetHero.hp = targetHero.maxHp / 2;
+    targetHero.ultimate.used = true;
+    showBattleAnnouncement("🔮 Rasputin resurrects!");
+  }
+
+  if (targetHero.hp <= 0) {
+    showDefeatScreen();
+    return;
+  }
+
+  endTurn();
+}
+
+
+function showBattleAnnouncement(message, skipUpdate = false) {
+  const turnIndicator = document.getElementById('turn-indicator');
+  turnIndicator.textContent = message;
+  if (!skipUpdate) {
+    setTimeout(updateTurn, 1500);
+  }
+}
+
+
+function playElephantStampede() {
+  const elephant = document.createElement('div');
+  elephant.textContent = "🐘";
+  elephant.classList.add('elephant');
+  document.body.appendChild(elephant);
+  
+  setTimeout(() => {
+    elephant.remove();
+  }, 2000);
+}
+
+function playShieldWave() {
+  const shield = document.createElement('div');
+  shield.classList.add('shield');
+  document.body.appendChild(shield);
+  
+  setTimeout(() => {
+    shield.remove();
+  }, 2000);
+}
+
+function playMysticGlow() {
+  const glow = document.createElement('div');
+  glow.classList.add('glow');
+  document.body.appendChild(glow);
+  
+  setTimeout(() => {
+    glow.remove();
+  }, 2000);
+}
+
+function useEnemySpecial(boss) {
+  const announcement = document.getElementById('turn-indicator');
+
+  if (boss.name === "King George III") {
+    // TAX THEM ALL: damage all players
+    announcement.textContent = "👑 King George III uses TAX THEM ALL!";
+    selectedTeam.forEach(hero => {
+      hero.hp -= 200;
+    });
+  } else if (boss.name === "King Louis XVI") {
+    // Heal himself
+    announcement.textContent = "👑 King Louis XVI uses Royal Decree!";
+    boss.hp = Math.min(boss.maxHp, boss.hp + 100);
+  }
+
+  updateHealthBars();
+}
+
+function updateHealthBars() {
+  selectedTeam.forEach((hero, i) => {
+    updateHealthBar('player', i, hero.hp, hero.maxHp);
+  });
+
+  enemies.forEach((enemy, i) => {
+    updateHealthBar('enemy', i, enemy.hp, enemy.maxHp);
+  });
+}
+
+
+function generateEnemiesForLevel(level, wave) {
+  if (level === 1 && wave === 1) {
+    return [{ 
+      name: "British Guard", 
+      hp: 100, 
+      maxHp: 100, 
+      image: "images/bosses/britishsoldier.png" // (or whatever your guard image is)
+    }];
+  }
+  if (level === 1 && wave === 2) {
+    // 🛠️ Use the full King George III template
+    return [{ ...bossTemplates["King George III"] }];
+  }
+  return [];
+}
+
+
+function toggleSound() {
+  soundsEnabled = !soundsEnabled;
+}
+
+function playVictorySound() {
+  if (soundsEnabled) {
+    const victorySound = document.getElementById('victory-sound');
+    victorySound.currentTime = 0;
+    victorySound.play();
+  }
+}
+
+    function startGame() {
+      updateUI();
+      interval = setInterval(() => {
+        timer--;
+        timeLeft.textContent = timer;
+        if (timer <= 0) {
+          endGame("Out of time! King George wins. 👑");
+        }
+      }, 1000);
+    }
+
+    function updateUI() {
+      if (currentIndex >= questions.length) {
+        currentIndex = 0;
+      }
+
+      const q = questions[currentIndex];
+      questionText.textContent = q.prompt;
+
+      // Shuffle answers
+      const allOptions = [...q.wrong, q.correct].sort(() => 0.5 - Math.random());
+
+      optionsDiv.innerHTML = "";
+      allOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.classList.add('option');
+        btn.textContent = opt;
+        btn.onclick = () => {
+          if (opt === q.correct) {
+            score += 15;
+          } else {
+            score -= 10;
+          }
+
+          score = Math.min(100, Math.max(0, score));
+          patriotScore.textContent = score;
+          patriotFill.style.width = `${score}%`;
+
+          if (score >= 100) {
+            endGame("Victory! The Colonies cheer your wit! 🦅");
+          } else if (score <= 0) {
+            endGame("Defeat! You lost the crowd. 🍵");
+          } else {
+            currentIndex++;
+            updateUI();
+          }
+        };
+        optionsDiv.appendChild(btn);
+      });
+    }
+    function playerWinsLevel1() {
+  console.log("Player wins American Revolution!");
+
+  // Play victory sound
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+
+  // Show victory overlay
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+
+  // Show the "Next!" button
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.animation = 'pulseNext 2s infinite';
+
+  // 🚀 Instead of redirecting, go to hero selection
+  nextButton.onclick = () => {
+    overlay.style.display = 'none';
+    nextButton.style.display = 'none';
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('hero-select-screen').classList.remove('hidden');
+    renderHeroSelection();
+  };
+}
+
+function endGame(message) {
+  clearInterval(interval);
+  questionBox.classList.add('hidden');
+  resultBox.textContent = message;
+  resultBox.classList.remove('hidden');
+
+  if (message.includes("Victory")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel1();
+  }
+}
+function renderHeroSelection() {
+    const confirmButton = document.getElementById('confirm-heroes');
+confirmButton.onclick = null;
+
+  const heroList = document.getElementById('hero-list');
+  heroList.innerHTML = '';
+
+  const unlockedLevel = getHighestLevelWon(); // We'll track this from your progress
+  selectedHeroes = [];
+
+  allHeroes.forEach(hero => {
+  const card = document.createElement('div');
+  card.className = 'hero-card';
+  if (!unlockedHeroes.includes(hero.id)) {
+    card.classList.add('locked'); // Add gray + non-clickable style
+  }
+  card.innerHTML = `
+    <img src="${hero.image}" alt="${hero.name}">
+    <h3>${hero.name}</h3>
+  `;
+  
+  if (unlockedHeroes.includes(hero.id)) {
+  card.addEventListener('click', () => {
+    if (selectedHeroes.some(h => h.name === hero.name)) {
+      selectedHeroes = selectedHeroes.filter(h => h.name !== hero.name);
+      card.classList.remove('selected');
+    } else if (selectedHeroes.length < 3) {
+      selectedHeroes.push({ ...hero });
+      card.classList.add('selected');
+    }
+    updateConfirmButton();
+  });
+}
+
+
+  document.getElementById('hero-list').appendChild(card);
+});
+  confirmButton.onclick = () => {
+  if (selectedHeroes.length === 3) {
+    startBattle(selectedHeroes);
+  }
+};
+}
+
+function selectHero(hero, card) {
+  if (selectedHeroes.some(h => h.name === hero.name)) {
+    selectedHeroes = selectedHeroes.filter(h => h.name !== hero.name);
+    card.classList.remove('selected');
+  } else if (selectedHeroes.length < 3) {
+    selectedHeroes.push({ ...hero }); // 🛠 FULL clone with stats
+    card.classList.add('selected');
+  }
+  updateConfirmButton();
+}
+
+function updateConfirmButton() {
+  const confirmButton = document.getElementById('confirm-heroes');
+  if (selectedHeroes.length === 3) {
+    confirmButton.disabled = false;
+    confirmButton.classList.remove('disabled');
+  } else {
+    confirmButton.disabled = true;
+    confirmButton.classList.add('disabled');
+  }
+}
+
+function getHighestLevelWon() {
+  const highest = parseInt(localStorage.getItem('highestLevelWon') || "1");
+  return highest;
+}
+function showBossCutscene(bossName, callback) {
+  const cutscene = document.getElementById('boss-cutscene');
+  document.getElementById('boss-name').textContent = bossName;
+
+  cutscene.style.opacity = '1';
+  cutscene.style.pointerEvents = 'auto';
+
+  setTimeout(() => {
+    cutscene.style.opacity = '0';
+    cutscene.style.pointerEvents = 'none';
+    callback();
+  }, 2000); // Show for 2 seconds, then hide and continue
+}
+
+
+
+    window.onload = startGame;
+  </script>
+  <audio id="boss-arrival-sound" src="sounds/boss-arrival.mp3" preload="auto"></audio>
+  <div id="boss-cutscene" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:black; color:white; font-size:2em; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
+    <div style="font-size:3em;">👑 A New Challenger Appears!</div>
+    <div id="boss-name" style="margin-top:20px;">King George III</div>
+  </div>
+</body>
+</html>

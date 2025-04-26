@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Missile Tinder - Cuban Missile Crisis</title>
+  <style>
+    body {
+      font-family: "Arial Rounded MT Bold", Arial, sans-serif;
+      background: linear-gradient(to bottom right, #1c1f26, #3e3e52);
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #F0C808;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    #stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+
+    #card {
+      background: white;
+      color: black;
+      padding: 30px;
+      border-radius: 20px;
+      width: 300px;
+      margin: 30px auto;
+      font-size: 1.2em;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+
+    .buttons button {
+      background: #2E282A;
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      margin: 10px;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .buttons button:hover {
+      background: #17BEBB;
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 2em;
+      font-weight: bold;
+    }
+    @keyframes pulseNext {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+#victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 223, 0, 0.7) 0%, rgba(255, 215, 0, 0.3) 40%, rgba(255, 215, 0, 0) 70%);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: victoryFade 2s ease forwards;
+}
+
+@keyframes victoryFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+#next-button {
+  animation: pulseNext 2s infinite;
+  z-index: 1000;
+}
+
+#reward-chest {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, #fff3b0, #ffe066);
+  color: #2E282A;
+  padding: 20px 40px;
+  border-radius: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: popFadeChest 5s ease forwards;
+  z-index: 9998;
+}
+
+#chest-icon {
+  font-size: 4em;
+  margin-bottom: 10px;
+  animation: shakeChest 2s infinite;
+}
+
+#reward-text {
+  margin-top: 10px;
+  font-size: 1.5em;
+}
+
+@keyframes shakeChest {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes popFadeChest {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+  20% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+  40% { transform: translateX(-50%) scale(1); }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+  </style>
+</head>
+<body>
+    <div id="victory-overlay" style="display:none;"></div>
+
+    <div id="reward-chest" style="display:none;">
+      <div id="chest-icon" onclick="openChest()">📦</div>
+      <div id="reward-text" style="display:none;"></div>
+    </div>
+    
+    <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
+    
+    <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
+      Next!
+    </button>
+    
+  <h1>🚀 Missile Tinder</h1>
+
+  <div id="stats">
+    <div class="stat">DEFCON: <span id="defcon">3</span></div>
+    <div class="stat">Popularity: <span id="popularity">50</span></div>
+    <div class="stat">Crisis Tension: <span id="tension">50</span></div>
+  </div>
+
+  <div id="card">
+    <div id="situation">Loading...</div>
+    <div class="buttons">
+      <button onclick="choose('left')">❌ Reject</button>
+      <button onclick="choose('right')">✅ Accept</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    const situations = [
+      {
+        text: "Soviet ships are approaching Cuba. Allow them through?",
+        left: { defcon: -1, tension: +20, popularity: -10 },
+        right: { defcon: +1, tension: -10, popularity: +5 }
+      },
+      {
+        text: "Authorize a full naval blockade?",
+        left: { defcon: +1, tension: -10, popularity: +5 },
+        right: { defcon: -2, tension: +15, popularity: -5 }
+      },
+      {
+        text: "Negotiate privately with Khrushchev?",
+        left: { defcon: 0, tension: +5, popularity: -10 },
+        right: { defcon: +1, tension: -15, popularity: +10 }
+      },
+      {
+        text: "Launch airstrikes on missile sites?",
+        left: { defcon: +2, tension: -20, popularity: +5 },
+        right: { defcon: -3, tension: +30, popularity: -20 }
+      },
+      {
+        text: "Publicly demand missile removal at the UN?",
+        left: { defcon: 0, tension: +5, popularity: +10 },
+        right: { defcon: +1, tension: -5, popularity: +5 }
+      },
+      {
+        text: "Accept a secret deal (remove Turkey missiles)?",
+        left: { defcon: -1, tension: +10, popularity: -5 },
+        right: { defcon: +2, tension: -20, popularity: +10 }
+      }
+    ];
+
+    let currentSituation = 0;
+    let defcon = 3;
+    let popularity = 50;
+    let tension = 50;
+
+    const defconDisplay = document.getElementById('defcon');
+    const popularityDisplay = document.getElementById('popularity');
+    const tensionDisplay = document.getElementById('tension');
+    const situationText = document.getElementById('situation');
+    const result = document.getElementById('result');
+
+    function updateStats(change) {
+      defcon = Math.max(1, Math.min(5, defcon + change.defcon));
+      tension = Math.max(0, Math.min(100, tension + change.tension));
+      popularity = Math.max(0, Math.min(100, popularity + change.popularity));
+
+      defconDisplay.textContent = defcon;
+      popularityDisplay.textContent = popularity;
+      tensionDisplay.textContent = tension;
+    }
+
+    function choose(direction) {
+      if (currentSituation >= situations.length) return;
+
+      const situation = situations[currentSituation];
+      updateStats(situation[direction]);
+      currentSituation++;
+
+      if (defcon === 1) {
+        endGame("💥 DEFCON 1! Nuclear War!");
+      } else if (defcon === 5) {
+        endGame("🧊 DEFCON 5! Crisis collapsed into chaos.");
+      } else if (popularity === 0) {
+        endGame("📉 Public outrage! Impeachment!");
+      } else if (tension === 0) {
+        endGame("🏆 Peaceful Resolution! You're a hero!");
+      } else if (currentSituation >= situations.length) {
+        endGame("🏁 Crisis over! You survived history.");
+      } else {
+        showSituation();
+      }
+    }
+
+    function showSituation() {
+      situationText.textContent = situations[currentSituation].text;
+    }
+
+    function endGame(message) {
+      situationText.style.display = 'none';
+      document.querySelector('.buttons').style.display = 'none';
+      result.textContent = message;
+      if (message.includes("Peaceful")) {
+        // If player won, trigger the full victory celebration!
+        playerWinsLevel10();
+        if (message.includes("survived")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel10();
+  }
+  }
+    }
+    function playerWinsLevel10() {
+  console.log("Player wins Level 10!");
+
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.animation = 'pulseNext 2s infinite';
+
+  nextButton.onclick = () => {
+    window.location.href = "working.html?levelWon=10"; // ← Replace X with correct level number
+  };
+}
+
+function openChest() {
+  const chestIcon = document.getElementById('chest-icon');
+  const rewardText = document.getElementById('reward-text');
+
+  chestIcon.style.animation = 'none';
+  chestIcon.textContent = "🎉";
+  rewardText.style.display = 'block';
+
+  launchConfetti();
+
+  setTimeout(() => {
+    document.getElementById('reward-chest').style.display = 'none';
+  }, 4000);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) {
+    console.warn("No confetti canvas found.");
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  let colors = ['#FFC700', '#FF0000', '#2E82FF', '#28A745', '#FF69B4'];
+
+  let confettiPieces = [];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 8 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 6 - 3,
+      speedY: Math.random() * 5 + 2,
+      rotation: Math.random() * 360
+    });
+  }
+
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(p.x, p.y, p.size, p.size);
+      ctx.fill();
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.speedX;
+    });
+
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+
+    if (confettiPieces.length > 0) {
+      requestAnimationFrame(updateConfetti);
+    } else {
+      canvas.style.display = 'none';
+    }
+  }
+
+  updateConfetti();
+}
+
+
+    showSituation();
+  </script>
+</body>
+</html>

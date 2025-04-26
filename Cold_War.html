@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cold War Icebreaker - Spy Bluff</title>
+  <style>
+    body {
+      font-family: "Arial Rounded MT Bold", Arial, sans-serif;
+      background: linear-gradient(to bottom right, #283E51, #485563);
+      color: #E0E0E0;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #17BEBB;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .action-button {
+      padding: 15px 20px;
+      font-size: 1.2em;
+      background: #F0C808;
+      color: #2E282A;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .action-button:hover {
+      background: #17BEBB;
+      color: white;
+    }
+
+    #spy-result {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+
+    #spy-meter {
+      margin-top: 20px;
+      width: 300px;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background-color: #E53D00;
+      width: 50%;
+      transition: width 0.4s;
+    }
+
+    #spy-score-text {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 2em;
+      font-weight: bold;
+      color: #F0C808;
+    }
+    @keyframes pulseNext {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+#victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 223, 0, 0.7) 0%, rgba(255, 215, 0, 0.3) 40%, rgba(255, 215, 0, 0) 70%);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: victoryFade 2s ease forwards;
+}
+
+@keyframes victoryFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+#next-button {
+  animation: pulseNext 2s infinite;
+  z-index: 1000;
+}
+
+#reward-chest {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, #fff3b0, #ffe066);
+  color: #2E282A;
+  padding: 20px 40px;
+  border-radius: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: popFadeChest 5s ease forwards;
+  z-index: 9998;
+}
+
+#chest-icon {
+  font-size: 4em;
+  margin-bottom: 10px;
+  animation: shakeChest 2s infinite;
+}
+
+#reward-text {
+  margin-top: 10px;
+  font-size: 1.5em;
+}
+
+@keyframes shakeChest {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes popFadeChest {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+  20% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+  40% { transform: translateX(-50%) scale(1); }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+  </style>
+</head>
+
+<body>
+  <div id="victory-overlay" style="display:none;"></div>
+
+  <div id="reward-chest" style="display:none;">
+    <div id="chest-icon" onclick="openChest()">📦</div>
+    <div id="reward-text" style="display:none;"></div>
+  </div>
+  
+  <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
+  
+  <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
+    Next!
+  </button>
+  
+  <h1>🕵️ Cold War: Spy Games</h1>
+
+  <div class="actions">
+    <button class="action-button" onclick="choose('Espionage')">🕵️‍♂️ Espionage</button>
+    <button class="action-button" onclick="choose('Propaganda')">📢 Propaganda</button>
+    <button class="action-button" onclick="choose('Diplomacy')">🤝 Diplomacy</button>
+  </div>
+
+  <div id="spy-result">Make your move...</div>
+
+  <div id="spy-meter">
+    <div class="meter-fill" id="meter-fill"></div>
+  </div>
+
+  <div id="spy-score-text">Spy Score: 50/100</div>
+
+  <div id="result" style="display:none;"></div>
+
+  <script>
+    let spyScore = 50;
+    const spyResult = document.getElementById('spy-result');
+    const spyMeter = document.getElementById('meter-fill');
+    const spyScoreText = document.getElementById('spy-score-text');
+    const resultDiv = document.getElementById('result');
+
+    function choose(playerChoice) {
+      const options = ["Espionage", "Propaganda", "Diplomacy"];
+      const enemyChoice = options[Math.floor(Math.random() * options.length)];
+      
+      spyResult.textContent = `You chose ${playerChoice}. USSR chose ${enemyChoice}.`;
+
+      if (playerChoice === enemyChoice) {
+        spyScore += 15;
+      } else if (
+        (playerChoice === "Espionage" && enemyChoice === "Diplomacy") ||
+        (playerChoice === "Propaganda" && enemyChoice === "Espionage") ||
+        (playerChoice === "Diplomacy" && enemyChoice === "Propaganda")
+      ) {
+        // You outplayed them!
+        spyScore += 10;
+      } else {
+        spyScore -= 15;
+      }
+
+      spyScore = Math.max(0, Math.min(100, spyScore));
+      spyMeter.style.width = `${spyScore}%`;
+      spyScoreText.textContent = `Spy Score: ${spyScore}/100`;
+
+      if (spyScore >= 100) {
+        endGame("🏆 Victory! You Outmaneuvered the Soviets!");
+      } else if (spyScore <= 0) {
+        endGame("💀 Cold War Disaster! You've been exposed.");
+      }
+    }
+
+    function endGame(message) {
+      document.querySelector('.actions').style.display = 'none';
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = message;
+      if (message.includes("Victory")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel5();
+  }
+    }
+    function playerWinsLevel5() {
+  console.log("Player wins Level 5!");
+
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.animation = 'pulseNext 2s infinite';
+
+  nextButton.onclick = () => {
+    window.location.href = "working.html?levelWon=5"; // ← Replace X with correct level number
+  };
+}
+
+function openChest() {
+  const chestIcon = document.getElementById('chest-icon');
+  const rewardText = document.getElementById('reward-text');
+
+  chestIcon.style.animation = 'none';
+  chestIcon.textContent = "🎉";
+  rewardText.style.display = 'block';
+
+  launchConfetti();
+
+  setTimeout(() => {
+    document.getElementById('reward-chest').style.display = 'none';
+  }, 4000);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) {
+    console.warn("No confetti canvas found.");
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  let colors = ['#FFC700', '#FF0000', '#2E82FF', '#28A745', '#FF69B4'];
+
+  let confettiPieces = [];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 8 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 6 - 3,
+      speedY: Math.random() * 5 + 2,
+      rotation: Math.random() * 360
+    });
+  }
+
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(p.x, p.y, p.size, p.size);
+      ctx.fill();
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.speedX;
+    });
+
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+
+    if (confettiPieces.length > 0) {
+      requestAnimationFrame(updateConfetti);
+    } else {
+      canvas.style.display = 'none';
+    }
+  }
+
+  updateConfetti();
+}
+
+  </script>
+
+</body>
+</html>

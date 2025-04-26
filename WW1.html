@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trench Karaoke - WWI</title>
+  <style>
+    body {
+      font-family: "Arial Rounded MT Bold", Arial, sans-serif;
+      background: linear-gradient(to bottom right, #9BA4B5, #E5E5E5);
+      color: #2E282A;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #3F72AF;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    #lyrics {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+
+    #input-area {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .letter-button {
+      padding: 15px 20px;
+      font-size: 1.5em;
+      background: #F0C808;
+      color: #2E282A;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .letter-button:hover {
+      background: #17BEBB;
+      color: white;
+    }
+
+    #morale-bar {
+      margin-top: 20px;
+      width: 300px;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow: hidden;
+    }
+
+    .morale-fill {
+      height: 100%;
+      width: 50%;
+      background-color: #3F72AF;
+      transition: width 0.4s;
+    }
+
+    #morale-text {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    #result {
+      margin-top: 30px;
+      font-size: 2em;
+      font-weight: bold;
+      color: #E53D00;
+    }
+    @keyframes pulseNext {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+#victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 223, 0, 0.7) 0%, rgba(255, 215, 0, 0.3) 40%, rgba(255, 215, 0, 0) 70%);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: victoryFade 2s ease forwards;
+}
+
+@keyframes victoryFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+#next-button {
+  animation: pulseNext 2s infinite;
+  z-index: 1000;
+}
+
+#reward-chest {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, #fff3b0, #ffe066);
+  color: #2E282A;
+  padding: 20px 40px;
+  border-radius: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: popFadeChest 5s ease forwards;
+  z-index: 9998;
+}
+
+#chest-icon {
+  font-size: 4em;
+  margin-bottom: 10px;
+  animation: shakeChest 2s infinite;
+}
+
+#reward-text {
+  margin-top: 10px;
+  font-size: 1.5em;
+}
+
+@keyframes shakeChest {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes popFadeChest {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+  20% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+  40% { transform: translateX(-50%) scale(1); }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+  </style>
+</head>
+
+<body>
+    <div id="victory-overlay" style="display:none;"></div>
+
+    <div id="reward-chest" style="display:none;">
+      <div id="chest-icon" onclick="openChest()">📦</div>
+      <div id="reward-text" style="display:none;"></div>
+    </div>
+    
+    <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
+    
+    <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
+      Next!
+    </button>
+    
+  <h1>🎤 Trench Karaoke: WWI</h1>
+
+  <div id="lyrics">Loading song...</div>
+
+  <div id="input-area"></div>
+
+  <div id="morale-bar">
+    <div class="morale-fill" id="morale-fill"></div>
+  </div>
+
+  <div id="morale-text">Morale: 50/100</div>
+
+  <div id="result" style="display:none;"></div>
+
+  <script>
+    const lyrics = "WE WILL WIN THIS WAR".split('');
+    let morale = 50;
+    const lyricsDiv = document.getElementById('lyrics');
+    const inputArea = document.getElementById('input-area');
+    const moraleFill = document.getElementById('morale-fill');
+    const moraleText = document.getElementById('morale-text');
+    const resultDiv = document.getElementById('result');
+
+    function renderLyrics() {
+      lyricsDiv.textContent = lyrics.join(' ');
+    }
+
+    function renderButtons() {
+      inputArea.innerHTML = '';
+      lyrics.forEach((letter, index) => {
+        const btn = document.createElement('button');
+        btn.classList.add('letter-button');
+        btn.textContent = letter;
+        btn.onclick = () => handleLetterClick(index, letter);
+        inputArea.appendChild(btn);
+      });
+    }
+
+    function handleLetterClick(indexClicked, letterClicked) {
+      if (indexClicked === 0) {
+        lyrics.shift(); // remove first correct letter
+        morale = Math.min(100, morale + 5);
+      } else {
+        morale = Math.max(0, morale - 10);
+      }
+      updateUI();
+
+      if (morale >= 100) {
+        endGame("🏆 Soldiers Cheer You On! Victory by Song!");
+      } else if (morale <= 0) {
+        endGame("💀 Morale Broken. Mutiny Begins!");
+      } else if (lyrics.length === 0) {
+        endGame("🏆 You finished the song! Spirits lifted!");
+      }
+    }
+
+    function updateUI() {
+      renderLyrics();
+      renderButtons();
+      moraleFill.style.width = `${morale}%`;
+      moraleText.textContent = `Morale: ${morale}/100`;
+    }
+
+    function endGame(message) {
+      inputArea.innerHTML = '';
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = message;
+      if (message.includes("Cheer")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel4();
+    if (message.includes("finished")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel4();
+  }
+  }
+    }
+
+    function playerWinsLevel4() {
+  console.log("Player wins Level 4!");
+
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.animation = 'pulseNext 2s infinite';
+
+  nextButton.onclick = () => {
+    window.location.href = "working.html?levelWon=4"; // ← Replace X with correct level number
+  };
+}
+
+function openChest() {
+  const chestIcon = document.getElementById('chest-icon');
+  const rewardText = document.getElementById('reward-text');
+
+  chestIcon.style.animation = 'none';
+  chestIcon.textContent = "🎉";
+  rewardText.style.display = 'block';
+
+  launchConfetti();
+
+  setTimeout(() => {
+    document.getElementById('reward-chest').style.display = 'none';
+  }, 4000);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) {
+    console.warn("No confetti canvas found.");
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  let colors = ['#FFC700', '#FF0000', '#2E82FF', '#28A745', '#FF69B4'];
+
+  let confettiPieces = [];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 8 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 6 - 3,
+      speedY: Math.random() * 5 + 2,
+      rotation: Math.random() * 360
+    });
+  }
+
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(p.x, p.y, p.size, p.size);
+      ctx.fill();
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.speedX;
+    });
+
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+
+    if (confettiPieces.length > 0) {
+      requestAnimationFrame(updateConfetti);
+    } else {
+      canvas.style.display = 'none';
+    }
+  }
+
+  updateConfetti();
+}
+
+    // Initialize
+    renderLyrics();
+    renderButtons();
+  </script>
+
+</body>
+</html>
