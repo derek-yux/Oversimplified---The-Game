@@ -441,6 +441,13 @@
   </style>
 </head>
 <body>
+  <div id="intro-cutscene" style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100vw; height:100vh; background:black; color:white; font-family:'Fredoka', sans-serif; font-size:2em; z-index:99999; position:fixed; top:0; left:0; background-size:cover; background-position:center; transition:background-image 1s ease;">
+    <div id="cutscene-overlay" style="background: rgba(0,0,0,0.5); width:100%; height:100%; position:absolute; top:0; left:0;"></div>
+    <div id="cutscene-text" style="text-align:center; max-width:600px; padding:20px; z-index:1;">Loading...</div>
+    <button id="cutscene-next" style="margin-top:30px; padding:10px 20px; font-size:1.2em; background:#FFD700; color:black; border:none; border-radius:10px; cursor:pointer; display:none; z-index:1;">🎮 Start Game!</button>
+  </div>
+  
+  
     <div id="victory-overlay" style="display:none;">
     </div>    
     <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
@@ -2128,8 +2135,54 @@ function showBossCutscene(bossName, callback) {
     callback();
   }, 2000); // Show for 2 seconds, then hide and continue
 }
+const cutsceneSlides = [
+  "1765: Britain demands money from the colonies.",
+  "The Colonists say: How about... no?",
+  "Britain: *angry British noises*",
+  "Thus begins the American Revolution!"
+];
+
+const cutsceneBackgrounds = [
+  "url('images/cutscene/redcoats.png')",
+  "url('images/cutscene/tea_party.png')",
+  "url('images/cutscene/angry_king.png')",
+  "url('images/cutscene/revolution_flags.png')"
+];
+
+let currentSlide = 0;
+const introCutscene = document.getElementById('intro-cutscene');
+const cutsceneText = document.getElementById('cutscene-text');
+const cutsceneNext = document.getElementById('cutscene-next');
+
+cutsceneText.textContent = cutsceneSlides[currentSlide];
+introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
+
+const cutsceneInterval = setInterval(() => {
+  currentSlide++;
+  if (currentSlide < cutsceneSlides.length - 1) {
+    cutsceneText.textContent = cutsceneSlides[currentSlide];
+    introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
+  } else if (currentSlide === cutsceneSlides.length - 1) {
+    cutsceneText.textContent = cutsceneSlides[currentSlide];
+    introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
+    clearInterval(cutsceneInterval);
+    cutsceneNext.style.display = 'inline-block';
+  }
+}, 1500);
 
 
+// Start Game button click
+cutsceneNext.addEventListener('click', () => {
+  introCutscene.style.display = 'none';
+  document.getElementById('question-box').style.display = 'block';
+  document.querySelector('.stats').style.display = 'block';
+  startTimer();
+  loadQuestion();
+});
+
+// Hide normal game UI initially
+document.getElementById('question-box').style.display = 'none';
+document.querySelector('.stats').style.display = 'none';
 
     window.onload = startGame;
   </script>
