@@ -2055,8 +2055,11 @@ function enemyTurn() {
   if (enemyCards[attackerIndex]) {
     enemyCards[attackerIndex].classList.add('active-character');
   }
-  const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
-  showFloatingLine(randomAttackLine, "enemy", attackerIndex);
+
+   if (attacker.attackLines && attacker.attackLines.length > 0) {
+    const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
+    showFloatingLine(randomAttackLine, "enemy", attackerIndex);
+  }
 
 if (attacker.isBoss) {
   playBossAttackAura(attackerIndex);
@@ -2292,9 +2295,9 @@ function useEnemySpecial(boss) {
 function generateEnemiesForLevel(level, wave) {
   if (level === 1 && wave === 1) {
     return [
-      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, attackLines: ['Charge!'], image: "images/bosses/britishsoldier.png" },
-      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, attackLines: ['Charge!'], image: "images/bosses/britishsoldier.png" },
-      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, attackLines: ['Charge!'], image: "images/bosses/britishsoldier.png" }
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30,  image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" }
     ];
   }
   if (level === 1 && wave === 2) {
