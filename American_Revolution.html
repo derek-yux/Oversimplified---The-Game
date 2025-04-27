@@ -2354,6 +2354,8 @@ const cutsceneInterval = setInterval(() => {
     introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
     clearInterval(cutsceneInterval);
     cutsceneNext.style.display = 'inline-block';
+    const buttonShine = document.getElementById('button-shine');
+buttonShine.style.animation = 'shineMove 2s ease-out forwards';
   }
 }, 1500);
 
