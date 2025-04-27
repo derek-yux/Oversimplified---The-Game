@@ -151,6 +151,34 @@
   50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+@keyframes bossAttackAura {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.boss-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, #ff5722, #ff9800);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: bossAttackAura 1s ease-out forwards;
+  pointer-events: none;
+}
 @keyframes teamBuffFlash {
   0% { background-color: #ffffff; }
   50% { background-color: #ffeb3b; } /* nice golden flash */
@@ -776,6 +804,7 @@ const bossTemplates = {
     image: "images/bosses/kinggeorge.png",
     hp: 500,
     maxHp: 500,
+    isBoss: true,
     attack: 150,
     attackLines: [
     "TAX THEM ALL!",
@@ -796,6 +825,7 @@ const bossTemplates = {
     name: "King Louis XVI",
     hp: 600,
     maxHp: 600,
+    isBoss: true,
     attack: 60,
     special: {
       name: "Royal Decree",
@@ -917,6 +947,10 @@ function actuallyAttackEnemy(heroIndex, enemyIndex) {
   // Apply damage
   target.hp -= hero.attack;
   updateHealthBars();
+  if (target.hurtLines && target.hurtLines.length > 0 && target.hp > 0) {
+  const randomHurtLine = target.hurtLines[Math.floor(Math.random() * target.hurtLines.length)];
+  showFloatingLine(randomHurtLine, "enemy", enemies.indexOf(target));
+}
 
   if (target.hp <= 0) {
     target.hp = 0;
@@ -1311,6 +1345,10 @@ function playerAttackEnemy(enemyIndex) {
   // Apply damage
   target.hp -= hero.attack;
   updateHealthBars();
+  if (target.hurtLines && target.hurtLines.length > 0 && target.hp > 0) {
+  const randomHurtLine = target.hurtLines[Math.floor(Math.random() * target.hurtLines.length)];
+  showFloatingLine(randomHurtLine, "enemy", enemies.indexOf(target));
+}
 
   if (target.hp <= 0) {
     target.hp = 0; // Make sure health doesn't go negative
@@ -1348,6 +1386,18 @@ function playTeamBuffFlash() {
       card.classList.remove('buff-flash');
     }, 1000); // match animation length
   });
+}
+function playBossAttackAura(enemyIndex) {
+  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1})`);
+  if (!enemyCard) return;
+
+  const aura = document.createElement('div');
+  aura.classList.add('boss-aura');
+  enemyCard.appendChild(aura);
+
+  setTimeout(() => {
+    aura.remove();
+  }, 1000); // Match the animation length
 }
 
 function showCharacterTooltip(event, character) {
@@ -1836,7 +1886,13 @@ function enemyTurn() {
   }
 
   const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-
+  if (attacker.attackLines && attacker.attackLines.length > 0) {
+  const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
+  showFloatingLine(randomAttackLine, "enemy", attackerIndex);
+}
+if (attacker.isBoss) {
+  playBossAttackAura(attackerIndex);
+}
   // Highlight enemy
   document.querySelectorAll('.character-card').forEach(card => {
     card.classList.remove('active-character');
