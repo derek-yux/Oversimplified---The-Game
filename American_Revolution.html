@@ -1795,7 +1795,7 @@ function enemyTurn() {
   }
 
   const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-
+  showBattleAnnouncement(`⚔️ ${attacker.name} is attacking!`, true);
   // Clear previous active highlights
   document.querySelectorAll('.character-card').forEach(card => {
     card.classList.remove('active-character');
@@ -1860,7 +1860,7 @@ function enemyTurn() {
       showFloatingLine(randomHurtLine, "player", selectedHeroes.indexOf(targetHero));
     }
   }, 400);
-
+  showBattleAnnouncement(`💥 ${attacker.name} hit ${targetHero.name}!`, true);
   updateHealthBars();
 
   // Special Rasputin revive
