@@ -2116,7 +2116,11 @@ if (attacker.isBoss) {
         }, 500);
       }
 
-
+      setTimeout(() => {
+  if (!isPlayerTurn) {
+    enemyBasicAttack();
+  }
+}, 2000)
       let incomingDamage = attacker.attack;
 if (targetHero.defenseBoost) {
   incomingDamage = Math.max(10, incomingDamage - targetHero.defenseBoost);
@@ -2148,6 +2152,25 @@ targetHero.hp -= incomingDamage;
       setTimeout(endTurn, 800); // Small pause before returning control
     }, 800); // Delay for actual attack after status checks
   }, 1000); // Delay after initial enemy announcement
+}
+function enemyBasicAttack() {
+  const aliveHeroes = selectedTeam.filter(hero => hero.hp > 0);
+  if (aliveHeroes.length === 0) {
+    handleDefeat();
+    return;
+  }
+
+  const targetIndex = Math.floor(Math.random() * aliveHeroes.length);
+  const targetHero = aliveHeroes[targetIndex];
+
+  // Do basic attack
+  targetHero.hp -= 30; // Or whatever default enemy damage is
+  updateHealthBars();
+  
+  // Floating "Enemy attacks!" animation (optional)
+  showBattleAnnouncement("💥 Enemy attacks!");
+
+  endTurn(); // Finally, give turn back to player
 }
 
 function showBattleAnnouncement(message, skipUpdate = false) {
