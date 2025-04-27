@@ -2343,58 +2343,94 @@ function showBossCutscene(bossName, callback) {
     callback();
   }, 2000); // Show for 2 seconds, then hide and continue
 }
-const cutsceneSlides = [
+const cutsceneTexts = [
   "1765: Britain demands money from the colonies.",
   "The Colonists say: How about... no?",
   "Britain: *angry British noises*",
   "Thus begins the American Revolution!"
 ];
 
-const cutsceneBackgrounds = [
-  "url('images/cutscene/redcoats.png')",
-  "url('images/cutscene/tea_party.png')",
-  "url('images/cutscene/angry_king.png')",
-  "url('images/cutscene/revolution_flags.png')"
+const cutsceneImages = [
+  "images/cutscene/redcoats.png",
+  "images/cutscene/tea_party.png",
+  "images/cutscene/angry_king.png",
+  "images/cutscene/revolution_flags.png"
 ];
 
-let currentSlide = 0;
-const introCutscene = document.getElementById('intro-cutscene');
-const cutsceneText = document.getElementById('cutscene-text');
-const cutsceneNext = document.getElementById('cutscene-next');
+let currentCutsceneIndex = 0;
+const preloadedCutsceneImages = [];
 
-cutsceneText.textContent = cutsceneSlides[currentSlide];
-introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
+function preloadCutsceneImages(callback) {
+  let loaded = 0;
+  cutsceneImages.forEach((src, index) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      preloadedCutsceneImages[index] = img;
+      loaded++;
+      if (loaded === cutsceneImages.length) {
+        callback();
+      }
+    };
+  });
+}
 
-const cutsceneInterval = setInterval(() => {
-  currentSlide++;
-  if (currentSlide < cutsceneSlides.length - 1) {
-    cutsceneText.textContent = cutsceneSlides[currentSlide];
-    introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
-  } else if (currentSlide === cutsceneSlides.length - 1) {
-    cutsceneText.textContent = cutsceneSlides[currentSlide];
-    introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
-    clearInterval(cutsceneInterval);
-    cutsceneNext.style.display = 'inline-block';
+function startCutsceneProperly() {
+  const introCutscene = document.getElementById('intro-cutscene');
+  const cutsceneText = document.getElementById('cutscene-text');
+  const cutsceneNextButton = document.getElementById('cutscene-next');
+
+  function showSlide(index) {
+    if (index >= preloadedCutsceneImages.length) {
+  cutsceneText.style.opacity = 0;
+  setTimeout(() => {
+    cutsceneNextButton.style.display = 'block';
     const buttonShine = document.getElementById('button-shine');
 buttonShine.style.animation = 'shineMove 2s ease-out forwards';
+  }, 500);
+  return;
+}
+
+    introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
+    cutsceneText.innerText = cutsceneTexts[index];
+
+    introCutscene.style.opacity = '0';
+    cutsceneText.style.opacity = '0';
+    setTimeout(() => {
+      introCutscene.style.transition = 'opacity 1.5s ease-in-out';
+      introCutscene.style.opacity = '1';
+      cutsceneText.style.transition = 'opacity 1.5s ease-in-out';
+      cutsceneText.style.opacity = '1';
+    }, 100);
+
+    setTimeout(() => {
+      currentCutsceneIndex++;
+      showSlide(currentCutsceneIndex);
+    }, 2500);
   }
-}, 1500);
 
+  showSlide(0);
 
-// Start Game button click
-cutsceneNext.addEventListener('click', () => {
-  introCutscene.style.display = 'none';
-  document.getElementById('question-box').style.display = 'block';
-  document.querySelector('.stats').style.display = 'block';
-  startTimer();
-  loadQuestion();
+  // Attach "Start Game" button click AFTER the elements exist
+  cutsceneNextButton.addEventListener('click', () => {
+    introCutscene.style.display = 'none';
+    document.getElementById('question-box').style.display = 'block';
+document.querySelector('.stats').style.display = 'block';
+
+    startGame();
+  });
+}
+
+window.addEventListener('load', () => {
+  // Hide normal game UI initially
+  document.getElementById('question-box').style.display = 'none';
+  document.querySelector('.stats').style.display = 'none';
+
+  preloadCutsceneImages(() => {
+    setTimeout(startCutsceneProperly, 300);
+  });
 });
 
-// Hide normal game UI initially
-document.getElementById('question-box').style.display = 'none';
-document.querySelector('.stats').style.display = 'none';
-
-    window.onload = startGame;
   </script>
   <audio id="boss-arrival-sound" src="sounds/boss-arrival.mp3" preload="auto"></audio>
   <div id="boss-cutscene" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:black; color:white; font-size:2em; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
