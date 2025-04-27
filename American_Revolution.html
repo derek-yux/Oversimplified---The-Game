@@ -1155,6 +1155,7 @@ function clearHighlightFriendlyHeroes() {
 function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
   const hero = selectedHeroes[heroIndex];
   const ally = selectedHeroes[allyIndex];
+  
 
   if (!ally || ally.hp <= 0) {
     showCustomPopup("This ally is already defeated!");
@@ -1200,7 +1201,17 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     });
     showBattleAnnouncement(`${hero.name} heals allies and weakens enemies!`);
   }
-
+  if (special.target === "self") {
+    showBattleAnnouncement(`✨ ${hero.name} empowers themselves!`, true);
+  } else if (special.target === "ally_team") {
+    showBattleAnnouncement(`✨ ${hero.name} boosts the entire team!`, true);
+  } else if (special.target === "ally") {
+    showBattleAnnouncement(`✨ ${hero.name} aids ${target.name}!`, true);
+  } else if (special.target === "enemy_team") {
+    showBattleAnnouncement(`💥 ${hero.name} strikes all enemies!`, true);
+  } else {
+    showBattleAnnouncement(`💥 ${hero.name} attacks ${target.name}!`, true);
+  }
   updateHealthBars();
   endTurn();
 }
@@ -1341,6 +1352,17 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
       }
     });
     showBattleAnnouncement(`${hero.name} tries to stun the enemy team!`);
+  }
+  if (ultimate.target === "self") {
+    showBattleAnnouncement(`🛡️ ${hero.name} powers up themselves!`, true);
+  } else if (ultimate.target === "ally_team") {
+    showBattleAnnouncement(`🛡️ ${hero.name} empowers the whole team!`, true);
+  } else if (ultimate.target === "enemy_team") {
+    showBattleAnnouncement(`⚔️ ${hero.name} unleashes devastation on ALL enemies!`, true);
+  } else if (ultimate.target.includes("enemy_random")) {
+    showBattleAnnouncement(`🎯 ${hero.name} strikes random enemies!`, true);
+  } else {
+    showBattleAnnouncement(`⚔️ ${hero.name} unleashes a mighty strike on ${enemies[targetIndex].name}!`, true);
   }
 
   hero.ultimate.used = true;
@@ -1545,7 +1567,6 @@ function playerSpecial(heroIndex) {
   const hero = selectedHeroes[heroIndex];
   const special = hero.special;
 
-  // 🔥 NEW LOGIC
   if (special.target === "self" || special.target === "ally_team") {
     // Auto-cast immediately
     actuallyUseSpecialOnAlly(heroIndex, heroIndex);
