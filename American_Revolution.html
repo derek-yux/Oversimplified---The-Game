@@ -1609,6 +1609,34 @@ function handleVictory(level) {
         banner.remove(); // Remove after faded out
       }, 1000);
     }
+    // 🛠️ NEW - After unlock card disappears, hide battle arena
+document.getElementById('battle-arena').classList.add('hidden');
+
+// 🛠️ NEW - Create a clean victory message
+const finalVictoryScreen = document.createElement('div');
+finalVictoryScreen.id = 'final-victory-screen';
+finalVictoryScreen.style = `
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(to bottom right, #FFD700, #FF4D4D);
+  color: white;
+  font-family: 'Fredoka', sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5em;
+  z-index: 9999;
+  animation: fadeIn 1.5s ease forwards;
+`;
+finalVictoryScreen.innerHTML = `
+  <h1>🏆 Victory!</h1>
+  <p style="margin-top:20px; font-size:1.2em;">You rewrote history!</p>
+`;
+document.body.appendChild(finalVictoryScreen);
+
 
     if (nextHero) {
       showNewHeroPopup(nextHero); // 🎉 show collectible unlock
