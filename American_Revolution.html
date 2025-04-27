@@ -1747,6 +1747,18 @@ styleSheet.innerHTML = `
   100% { transform: translate(-50%, -150px); opacity: 0; }
 }`;
 document.head.appendChild(styleSheet);
+const damageStyle = document.createElement('style');
+damageStyle.innerHTML = `
+.damage-number {
+  position: absolute;
+  color: red;
+  font-weight: bold;
+  font-size: 1.5em;
+  animation: floatUp 1.5s forwards;
+  z-index: 100;
+  text-shadow: 1px 1px 2px black;
+}`;
+document.head.appendChild(damageStyle);
 
 function canUseUltimate(hero) {
   if (hero.ultimate.used) return false;
@@ -2050,7 +2062,16 @@ function enemyTurn() {
 
   const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
   const attackerIndex = enemies.findIndex(e => e.name === attacker.name && e.hp === attacker.hp && e.image === attacker.image);
-  highlightActiveCharacter(attackerIndex, "enemy");
+  
+  document.querySelectorAll('.character-card').forEach(card => {
+    card.classList.remove('active-character');
+  });
+  
+  // Highlight attacking enemy
+  const enemyCards = document.querySelectorAll('#enemy-field .character-card');
+  if (enemyCards[attackerIndex]) {
+    enemyCards[attackerIndex].classList.add('active-character');
+  }
 
    if (attacker.attackLines && attacker.attackLines.length > 0) {
     const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
@@ -2064,18 +2085,13 @@ if (attacker.isBoss) {
 }
 
 setTimeout(() => {}, 1500);
-processEnemyTurnStages(attacker, attackerIndex, aliveHeroes);
-}
-
-function processEnemyTurnStages(attacker, attackerIndex, aliveHeroes) {
-  // Stage 1: Process status effects (after 1 second)
-  setTimeout(() => {
-    // Check if bleeding
+setTimeout(() => {
+    // Handle bleeding
     if (attacker.status === "bleeding") {
-      attacker.hp -= Math.floor(attacker.maxHp * 0.05);
+      attacker.hp -= Math.floor(attacker.maxHp * 0.05); // 5% bleed damage
       showBattleAnnouncement(`💉 ${attacker.name} suffers from bleeding!`);
       updateHealthBars();
-      
+
       if (attacker.hp <= 0) {
         attacker.hp = 0;
         updateHealthBars();
@@ -2083,16 +2099,16 @@ function processEnemyTurnStages(attacker, attackerIndex, aliveHeroes) {
         return;
       }
     }
-    
-    // Check if stunned
+
+    // Handle stunned
     if (attacker.status === "stunned") {
       showBattleAnnouncement(`💫 ${attacker.name} is stunned and cannot act!`);
       updateHealthBars();
       setTimeout(endTurn, 800);
       return;
     }
-    
-    // Stage 2: Target selection and attack (after another 800ms)
+
+    // Select target and perform attack
     setTimeout(() => {
       // Choose target
       let targetHero = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
@@ -2105,27 +2121,45 @@ function processEnemyTurnStages(attacker, attackerIndex, aliveHeroes) {
         showBattleAnnouncement(`🔄 ${attacker.name} is confused and attacks themselves!`);
       }
       
+      showBattleAnnouncement(`${attacker.name} attacks ${targetHero.name}!`);
+      
       // Play hit animation
-      const targetCard = (targetHero === attacker) 
+      const heroCard = (targetHero === attacker) 
         ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1}) .character-image`)
         : document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1}) .character-image`);
-        
-      if (targetCard) {
-        targetCard.classList.add('hit-animation');
+
+      if (heroCard) {
+        heroCard.classList.add('hit-animation');
         setTimeout(() => {
-          targetCard.classList.remove('hit-animation');
+          heroCard.classList.remove('hit-animation');
         }, 500);
       }
-      
-      // Calculate and apply damage
+
+      // THIS IS THE KEY FIX - Calculate and apply damage correctly
       let incomingDamage = attacker.attack;
       if (targetHero.defenseBoost) {
         incomingDamage = Math.max(10, incomingDamage - targetHero.defenseBoost);
       }
       targetHero.hp -= incomingDamage;
       
+      // Show damage amount as floating text
+      const damageText = document.createElement('div');
+      damageText.textContent = `-${incomingDamage}`;
+      damageText.classList.add('damage-number');
+      
+      const targetCard = (targetHero === attacker) 
+        ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1})`)
+        : document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1})`);
+        
+      if (targetCard) {
+        targetCard.appendChild(damageText);
+        setTimeout(() => {
+          damageText.remove();
+        }, 1000);
+      }
+      
       // Show hurt line if applicable
-      if (targetHero.hurtLines && targetHero !== attacker) {
+      if (targetHero.hurtLines && targetHero !== attacker && targetHero.hp > 0) {
         setTimeout(() => {
           const randomHurtLine = targetHero.hurtLines[Math.floor(Math.random() * targetHero.hurtLines.length)];
           showFloatingLine(randomHurtLine, "player", targetIndex);
@@ -2140,16 +2174,24 @@ function processEnemyTurnStages(attacker, attackerIndex, aliveHeroes) {
         targetHero.hp = targetHero.maxHp / 2;
         targetHero.ultimate.used = true;
         showBattleAnnouncement("🔮 Rasputin resurrects!");
+        updateHealthBars();
       }
       
       // Check for defeat
-      if (targetHero.hp <= 0 && targetHero.name !== "Grigori Rasputin") {
+      if (targetHero.hp <= 0) {
         targetHero.hp = 0;
         updateHealthBars();
-        showDefeatScreen();
-        return;
+        
+        // Check if all heroes are defeated
+        const remainingHeroes = selectedHeroes.filter(h => h.hp > 0);
+        if (remainingHeroes.length === 0) {
+          // No need to immediately call showDefeatScreen - let the UI update first
+          setTimeout(() => {
+            showDefeatScreen();
+          }, 500);
+          return;
+        }
       }
-      
       // End turn after a short delay
       setTimeout(endTurn, 800);
     }, 800);
@@ -2265,9 +2307,9 @@ function useEnemySpecial(boss) {
 function generateEnemiesForLevel(level, wave) {
   if (level === 1 && wave === 1) {
     return [
-      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" },
-      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" },
-      { name: "British Guard", hp: 100, maxHp: 100, image: "images/bosses/britishsoldier.png" }
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30,  image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" },
+      { name: "British Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" }
     ];
   }
   if (level === 1 && wave === 2) {
