@@ -1162,6 +1162,11 @@ function clearHighlightFriendlyHeroes() {
   });
 }
 function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
+  awaitingTarget = false;
+pendingHeroIndex = null;
+pendingAttackType = null;
+targetFriendly = false;
+clearHighlightFriendlyHeroes();
   const hero = selectedHeroes[heroIndex];
   const ally = selectedHeroes[allyIndex];
   
@@ -2066,11 +2071,12 @@ if (attacker.isBoss) {
         }, 500);
       }
 
-      let damage = 30;
-      if (targetHero.defenseBoost) {
-        damage = Math.max(10, damage - targetHero.defenseBoost);
-      }
-      targetHero.hp -= damage;
+
+      let incomingDamage = attacker.attack;
+if (targetHero.defenseBoost) {
+  incomingDamage = Math.max(10, incomingDamage - targetHero.defenseBoost);
+}
+targetHero.hp -= incomingDamage;
 
       setTimeout(() => {
         if (targetHero.hurtLines && targetHero !== attacker) {
