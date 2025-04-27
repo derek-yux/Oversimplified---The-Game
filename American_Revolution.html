@@ -1427,12 +1427,21 @@ function playerUltimate(heroIndex) {
   }
 
   awaitingTarget = true;
-  highlightAttackableEnemies();
   pendingHeroIndex = heroIndex;
   pendingAttackType = "ultimate";
 
-  showBattleAnnouncement("💥 Choose an enemy for Ultimate!", true);
+  // 🔥 NEW: Check whether ultimate targets allies or enemies
+  if (hero.ultimate.target && (hero.ultimate.target.includes("ally") || hero.ultimate.target.includes("self"))) {
+    targetFriendly = true;
+    highlightFriendlyHeroes();
+    showBattleAnnouncement("✨ Choose a teammate for Ultimate!", true);
+  } else {
+    targetFriendly = false;
+    highlightAttackableEnemies();
+    showBattleAnnouncement("💥 Choose an enemy for Ultimate!", true);
+  }
 }
+
 function highlightAttackableEnemies() {
   enemies.forEach((enemy, index) => {
     const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${index + 1})`);
@@ -1549,6 +1558,7 @@ function playerAttack(heroIndex) {
     return;
   }
   awaitingTarget = true;
+  targetFriendly = false;
   highlightAttackableEnemies();
   pendingHeroIndex = heroIndex;
   pendingAttackType = "normal";
@@ -1620,12 +1630,16 @@ function endTurn() {
   isPlayerTurn = !isPlayerTurn;
 
   if (isPlayerTurn) {
-    currentTurnIndex++; // 🛠️ Increment turn count only when player regains turn
+    currentTurnIndex++; 
     updateTurn();
   } else {
-    setTimeout(enemyTurn, 1000); // Enemy attacks after short delay
+    // NEW ✨ Add a longer delay after player move finishes
+    setTimeout(() => {
+      enemyTurn();
+    }, 1500); // 1.5 seconds feels much smoother
   }
 }
+
 function showNewHeroPopup(heroId) {
   const hero = allHeroes.find(h => h.id === heroId);
   if (!hero) return;
