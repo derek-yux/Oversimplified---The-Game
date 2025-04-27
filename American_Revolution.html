@@ -981,7 +981,7 @@ function renderBattleArena() {
   });
 }
 function actuallyAttackEnemy(heroIndex, enemyIndex) {
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
@@ -1164,13 +1164,13 @@ function clearHighlightFriendlyHeroes() {
 }
 function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
   awaitingTarget = false;
-pendingHeroIndex = null;
-pendingAttackType = null;
-targetFriendly = false;
-clearHighlightFriendlyHeroes();
+  pendingHeroIndex = null;
+  pendingAttackType = null;
+  targetFriendly = false;
+  clearHighlightFriendlyHeroes();
+
   const hero = selectedTeam[heroIndex];
   const ally = selectedTeam[allyIndex];
-  
 
   if (!ally || ally.hp <= 0) {
     showCustomPopup("This ally is already defeated!");
@@ -1184,25 +1184,18 @@ clearHighlightFriendlyHeroes();
     showBattleAnnouncement(`${hero.name} heals ${ally.name} for ${special.heal} HP!`);
   }
   else if (special.type === "buff") {
-  if (special.target === "ally_team") {
-    selectedTeam.forEach(h => {
-      h.attack += special.buff.attackBoost || 0;
-      h.defenseBoost = (h.defenseBoost || 0) + (special.buff.defenseBoost || 0);
-    });
-    playTeamBuffFlash();
-    showBattleAnnouncement(`${hero.name} buffs the entire team!`);
-  } else {
-    ally.attack += special.buff.attackBoost || 0;
-    ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
-    showBattleAnnouncement(`${hero.name} buffs ${ally.name}!`);
-  }
-}
-  else if (special.type === "buff_team") {
-    selectedHeroes.forEach(h => {
-      h.attack += special.attackBoost;
-    });
-    playTeamBuffFlash();
-    showBattleAnnouncement(`${hero.name} buffs the whole team with +${special.attackBoost} attack!`);
+    if (special.target === "ally_team") {
+      selectedTeam.forEach(h => {
+        h.attack += special.buff.attackBoost || 0;
+        h.defenseBoost = (h.defenseBoost || 0) + (special.buff.defenseBoost || 0);
+      });
+      playTeamBuffFlash();
+      showBattleAnnouncement(`${hero.name} buffs the entire team!`);
+    } else {
+      ally.attack += special.buff.attackBoost || 0;
+      ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
+      showBattleAnnouncement(`${hero.name} buffs ${ally.name}!`);
+    }
   }
   else if (special.type === "heal_buff") {
     ally.hp = Math.min(ally.maxHp, ally.hp + special.heal);
@@ -1210,7 +1203,7 @@ clearHighlightFriendlyHeroes();
     showBattleAnnouncement(`${hero.name} heals and buffs ${ally.name}!`);
   }
   else if (special.type === "heal_buff_team") {
-    selectedHeroes.forEach(h => {
+    selectedTeam.forEach(h => {
       h.hp = Math.min(h.maxHp, h.hp + special.heal);
       h.shield = (h.shield || 0) + special.shield;
     });
@@ -1218,7 +1211,7 @@ clearHighlightFriendlyHeroes();
     showBattleAnnouncement(`${hero.name} heals and shields the entire team!`);
   }
   else if (special.type === "heal_debuff") {
-    selectedHeroes.forEach(h => {
+    selectedTeam.forEach(h => {
       h.hp = Math.min(h.maxHp, h.hp + special.healAmount);
     });
     enemies.forEach(e => {
@@ -1226,29 +1219,15 @@ clearHighlightFriendlyHeroes();
     });
     showBattleAnnouncement(`${hero.name} heals allies and weakens enemies!`);
   }
-  if (special.target === "self") {
-    showBattleAnnouncement(`✨ ${hero.name} empowers themselves!`, true);
-  } else if (special.target === "ally_team") {
-    showBattleAnnouncement(`✨ ${hero.name} boosts the entire team!`, true);
-  } else if (special.target === "ally") {
-    showBattleAnnouncement(`✨ ${hero.name} aids ${target.name}!`, true);
-  } else if (special.target === "enemy_team") {
-    showBattleAnnouncement(`💥 ${hero.name} strikes all enemies!`, true);
-  } else {
-    showBattleAnnouncement(`💥 ${hero.name} attacks ${target.name}!`, true);
-  }
+
   updateHealthBars();
-  awaitingTarget = false;
-pendingHeroIndex = null;
-pendingAttackType = null;
-targetFriendly = false; // (optional extra safety)
-clearHighlightFriendlyHeroes(); // (optional extra cleanup)
   endTurn();
 }
 
 
+
 function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
@@ -1306,7 +1285,7 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
 }
 
 function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
 
   if (hero.ultimate.used) {
     showCustomPopup("Ultimate already used!");
@@ -1332,7 +1311,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     showBattleAnnouncement(`${hero.name} uses ${ultimate.name} and deals ${ultimate.damage} damage to ${target.name}!`);
   }
   else if (ultimate.type === "buff_team") {
-    selectedHeroes.forEach(h => {
+    selectedTeam.forEach(h => {
       h.attack += ultimate.attackBoost;
       h.defenseBoost = (h.defenseBoost || 0) + ultimate.defenseBoost;
     });
@@ -1371,7 +1350,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     enemies.forEach(e => {
       e.hp -= 100; // heavy damage to all (you can customize)
     });
-    const attacker = selectedHeroes[heroIndex];
+    const attacker = selectedTeam[heroIndex];
     attacker.defenseBoost = (attacker.defenseBoost || 0) - 20; // lose some defense
     showBattleAnnouncement(`${hero.name} blitzes all enemies but sacrifices defense!`);
   }
@@ -1384,7 +1363,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     showBattleAnnouncement(`${hero.name} tries to stun the enemy team!`);
   }
   else if (ultimate.type === "buff_team") {
-  selectedHeroes.forEach(h => {
+  selectedTeam.forEach(h => {
     h.attack += ultimate.attackBoost || 0;
     h.defenseBoost = (h.defenseBoost || 0) + (ultimate.defenseBoost || 0);
   });
@@ -1435,7 +1414,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
 
 
 function playerAttackEnemy(enemyIndex) {
-  const hero = selectedHeroes[activeHeroIndex];
+  const hero = selectedTeam[activeHeroIndex];
   const target = enemies[enemyIndex];
 
   if (!target || target.hp <= 0) {
@@ -1602,7 +1581,7 @@ function playerSpecial(heroIndex) {
     return;
   }
 
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const special = hero.special;
 
   if (special.target === "self" || special.target === "ally_team") {
@@ -1632,7 +1611,7 @@ function playerUltimate(heroIndex) {
     return;
   }
 
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const ultimate = hero.ultimate;
   if (ultimate.used) {
     showCustomPopup("Ultimate already used!");
@@ -1667,11 +1646,11 @@ function playerUltimate(heroIndex) {
 }
 
 function actuallyUseUltimateOnSelfOrTeam(heroIndex) {
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const ultimate = hero.ultimate;
 
   if (ultimate.type.includes("buff")) {
-    selectedHeroes.forEach(h => {
+    selectedTeam.forEach(h => {
       h.attack += ultimate.attackBoost || 0;
       h.defenseBoost = (h.defenseBoost || 0) + (ultimate.defenseBoost || 0);
     });
@@ -1684,7 +1663,7 @@ function actuallyUseUltimateOnSelfOrTeam(heroIndex) {
   endTurn();
 }
 function actuallyUseUltimateOnEnemies(heroIndex) {
-  const hero = selectedHeroes[heroIndex];
+  const hero = selectedTeam[heroIndex];
   const ultimate = hero.ultimate;
 
   if (ultimate.type.includes("damage")) {
@@ -2004,7 +1983,7 @@ function updateTurn() {
   turnCounter.textContent = `Turn ${currentTurnIndex + 1}`;
 
   if (isPlayerTurn) {
-    activeHeroIndex = currentTurnIndex % selectedHeroes.length; // Cycle through heroes
+    activeHeroIndex = currentTurnIndex % selectedTeam.length; // Cycle through heroes
     // Clear previous active highlights
 document.querySelectorAll('.character-card').forEach(card => {
   card.classList.remove('active-character');
@@ -2015,7 +1994,7 @@ const playerCards = document.querySelectorAll('#player-team .character-card');
 if (playerCards[activeHeroIndex]) {
   playerCards[activeHeroIndex].classList.add('active-character');
 }
-    turnIndicator.textContent = `🎯 Your Turn - ${selectedHeroes[activeHeroIndex].name}!`;
+    turnIndicator.textContent = `🎯 Your Turn - ${selectedTeam[activeHeroIndex].name}!`;
   } else {
     turnIndicator.textContent = "🎯 Enemy Turn!";
   }
@@ -2024,7 +2003,7 @@ if (playerCards[activeHeroIndex]) {
   if (isPlayerTurn) {
   const ultimateButtons = document.querySelectorAll('.battle-button');
 
-  selectedHeroes.forEach((hero, index) => {
+  selectedTeam.forEach((hero, index) => {
     const ultimateBtn = document.querySelector(`#player-team .character-card:nth-child(${index + 1}) .battle-button:nth-child(3)`);
 
     if (!ultimateBtn) return;
@@ -2056,7 +2035,7 @@ if (playerCards[activeHeroIndex]) {
 }
 
 function enemyTurn() {
-  const aliveHeroes = selectedHeroes.filter(h => h.hp > 0);
+  const aliveHeroes = selectedTeam.filter(h => h.hp > 0);
   const aliveEnemies = enemies.filter(e => e.hp > 0);
 
   if (aliveEnemies.length === 0) {
@@ -2116,7 +2095,7 @@ setTimeout(() => {
     setTimeout(() => {
       // Choose target
       let targetHero = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
-      let targetIndex = selectedHeroes.indexOf(targetHero);
+      let targetIndex = selectedTeam.indexOf(targetHero);
       
       // Handle confusion
       if (attacker.status === "confuse" && Math.random() < 0.5) {
@@ -2187,7 +2166,7 @@ setTimeout(() => {
         updateHealthBars();
         
         // Check if all heroes are defeated
-        const remainingHeroes = selectedHeroes.filter(h => h.hp > 0);
+        const remainingHeroes = selectedTeam.filter(h => h.hp > 0);
         if (remainingHeroes.length === 0) {
           // No need to immediately call showDefeatScreen - let the UI update first
           setTimeout(() => {
@@ -2437,7 +2416,7 @@ confirmButton.onclick = null;
   heroList.innerHTML = '';
 
   const unlockedLevel = getHighestLevelWon(); // We'll track this from your progress
-  selectedHeroes = [];
+  selectedTeam = [];
 
   allHeroes.forEach(hero => {
   const card = document.createElement('div');
@@ -2452,11 +2431,11 @@ confirmButton.onclick = null;
   
   if (unlockedHeroes.includes(hero.id)) {
   card.addEventListener('click', () => {
-    if (selectedHeroes.some(h => h.name === hero.name)) {
-      selectedHeroes = selectedHeroes.filter(h => h.name !== hero.name);
+    if (selectedTeam.some(h => h.name === hero.name)) {
+      selectedTeam = selectedTeam.filter(h => h.name !== hero.name);
       card.classList.remove('selected');
-    } else if (selectedHeroes.length < 3) {
-      selectedHeroes.push({ ...hero });
+    } else if (selectedTeam.length < 3) {
+      selectedTeam.push({ ...hero });
       card.classList.add('selected');
     }
     updateConfirmButton();
@@ -2467,18 +2446,18 @@ confirmButton.onclick = null;
   document.getElementById('hero-list').appendChild(card);
 });
   confirmButton.onclick = () => {
-  if (selectedHeroes.length === 3) {
-    startBattle(selectedHeroes);
+  if (selectedTeam.length === 3) {
+    startBattle(selectedTeam);
   }
 };
 }
 
 function selectHero(hero, card) {
-  if (selectedHeroes.some(h => h.name === hero.name)) {
-    selectedHeroes = selectedHeroes.filter(h => h.name !== hero.name);
+  if (selectedTeam.some(h => h.name === hero.name)) {
+    selectedTeam = selectedTeam.filter(h => h.name !== hero.name);
     card.classList.remove('selected');
-  } else if (selectedHeroes.length < 3) {
-    selectedHeroes.push({ ...hero }); // 🛠 FULL clone with stats
+  } else if (selectedTeam.length < 3) {
+    selectedTeam.push({ ...hero }); // 🛠 FULL clone with stats
     card.classList.add('selected');
   }
   updateConfirmButton();
@@ -2486,7 +2465,7 @@ function selectHero(hero, card) {
 
 function updateConfirmButton() {
   const confirmButton = document.getElementById('confirm-heroes');
-  if (selectedHeroes.length === 3) {
+  if (selectedTeam.length === 3) {
     confirmButton.disabled = false;
     confirmButton.classList.remove('disabled');
   } else {
