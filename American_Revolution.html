@@ -664,6 +664,10 @@ let pendingAttackType = null; // "normal" / "special" / "ultimate"
     },
     ultimate: {
       name: "Iron Will",
+      type: "buff_team",
+      target: "ally_team",
+      duration: 5,
+      buff: { defenseBoost: 30 },
       description: "🛡️ Instantly boost defense massively for 5 turns!",
       condition: "usable_anytime",
       used: false
@@ -1169,7 +1173,8 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     showBattleAnnouncement(`${hero.name} heals ${ally.name} for ${special.heal} HP!`);
   }
   else if (special.type === "buff") {
-    ally.attack += special.buff.attackBoost;
+    ally.attack += special.buff.attackBoost || 0;
+  ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
     showBattleAnnouncement(`${hero.name} buffs ${ally.name} with ${special.buff.attackBoost} attack!`);
   }
   else if (special.type === "buff_team") {
@@ -1213,6 +1218,11 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     showBattleAnnouncement(`💥 ${hero.name} attacks ${target.name}!`, true);
   }
   updateHealthBars();
+  awaitingTarget = false;
+pendingHeroIndex = null;
+pendingAttackType = null;
+targetFriendly = false; // (optional extra safety)
+clearHighlightFriendlyHeroes(); // (optional extra cleanup)
   endTurn();
 }
 
@@ -1353,6 +1363,14 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     });
     showBattleAnnouncement(`${hero.name} tries to stun the enemy team!`);
   }
+  else if (ultimate.type === "buff_team") {
+  selectedHeroes.forEach(h => {
+    h.attack += ultimate.attackBoost || 0;
+    h.defenseBoost = (h.defenseBoost || 0) + (ultimate.defenseBoost || 0);
+  });
+  playTeamBuffFlash();
+  showBattleAnnouncement(`${hero.name} empowers the team with ${ultimate.attackBoost} attack and ${ultimate.defenseBoost} defense!`);
+}
   if (ultimate.target === "self") {
     showBattleAnnouncement(`🛡️ ${hero.name} powers up themselves!`, true);
   } else if (ultimate.target === "ally_team") {
