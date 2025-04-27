@@ -1636,8 +1636,13 @@ function playerUltimate(heroIndex) {
 
   // 🔥 NEW LOGIC
   if (!ultimate.target || ultimate.target.includes('team') || ultimate.target.includes('self')) {
-    // Auto-cast immediately
-    actuallyUseUltimateOnEnemy(heroIndex, 0); // <- dummy index (because it's team-wide)
+    if (ultimate.type.includes('buff')) {
+      // For buff-type team ultimates (e.g., Churchill)
+      actuallyUseUltimateOnSelfOrTeam(heroIndex);
+    } else {
+      // For damage-type team ultimates
+      actuallyUseUltimateOnEnemies(heroIndex);
+    }
     return;
   }
 
@@ -1656,6 +1661,38 @@ function playerUltimate(heroIndex) {
   }
 }
 
+function actuallyUseUltimateOnSelfOrTeam(heroIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const ultimate = hero.ultimate;
+
+  if (ultimate.type.includes("buff")) {
+    selectedHeroes.forEach(h => {
+      h.attack += ultimate.attackBoost || 0;
+      h.defenseBoost = (h.defenseBoost || 0) + (ultimate.defenseBoost || 0);
+    });
+    playTeamBuffFlash();
+    showBattleAnnouncement(`${hero.name} boosts the team's attack and defense!`);
+  }
+
+  hero.ultimate.used = true;
+  updateHealthBars();
+  endTurn();
+}
+function actuallyUseUltimateOnEnemies(heroIndex) {
+  const hero = selectedHeroes[heroIndex];
+  const ultimate = hero.ultimate;
+
+  if (ultimate.type.includes("damage")) {
+    enemies.forEach(e => {
+      e.hp -= ultimate.damage;
+    });
+    showBattleAnnouncement(`${hero.name} unleashes destruction on all enemies!`);
+  }
+
+  hero.ultimate.used = true;
+  updateHealthBars();
+  endTurn();
+}
 
 function highlightAttackableEnemies() {
   enemies.forEach((enemy, index) => {
@@ -1772,6 +1809,14 @@ function playerAttack(heroIndex) {
     showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
+
+  awaitingTarget = false;
+  pendingHeroIndex = null;
+  pendingAttackType = null;
+  targetFriendly = false;
+  clearHighlightFriendlyHeroes();
+  clearHighlightAttackableEnemies();
+
   awaitingTarget = true;
   targetFriendly = false;
   highlightAttackableEnemies();
