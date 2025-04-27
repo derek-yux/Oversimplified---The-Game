@@ -151,6 +151,20 @@
   50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+@keyframes introZoomFade {
+  0% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+#intro-cutscene.first-slide-animation {
+  animation: introZoomFade 2s ease-out forwards;
+}
 @keyframes bossAttackAura {
   0% {
     transform: scale(0);
@@ -2362,8 +2376,29 @@ const introCutscene = document.getElementById('intro-cutscene');
 const cutsceneText = document.getElementById('cutscene-text');
 const cutsceneNext = document.getElementById('cutscene-next');
 
+function preloadCutsceneImages(callback) {
+  let loaded = 0;
+  cutsceneBackgrounds.forEach(src => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      loaded++;
+      if (loaded === cutsceneBackgrounds.length) {
+        callback();
+      }
+    };
+  });
+}
+
 cutsceneText.textContent = cutsceneSlides[currentSlide];
 introCutscene.style.backgroundImage = cutsceneBackgrounds[currentSlide];
+window.addEventListener('load', () => {
+  preloadCutsceneImages(() => {
+    const introCutscene = document.getElementById('intro-cutscene');
+    introCutscene.classList.add('first-slide-animation'); // ✨ Add animation only once
+    setTimeout(showNextCutsceneSlide, 500);
+  });
+});
 
 const cutsceneInterval = setInterval(() => {
   currentSlide++;
