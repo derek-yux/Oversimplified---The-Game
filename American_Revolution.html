@@ -1795,90 +1795,96 @@ function enemyTurn() {
   }
 
   const attacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-  showBattleAnnouncement(`⚔️ ${attacker.name} is attacking!`, true);
-  // Clear previous active highlights
+
+  // Highlight enemy
   document.querySelectorAll('.character-card').forEach(card => {
     card.classList.remove('active-character');
   });
-
   const enemyCards = document.querySelectorAll('#enemy-field .character-card');
   const attackerIndex = enemies.findIndex(e => e.name === attacker.name && e.hp === attacker.hp && e.image === attacker.image);
   if (enemyCards[attackerIndex]) {
     enemyCards[attackerIndex].classList.add('active-character');
   }
 
-  // ✨ APPLY STATUS EFFECTS FIRST
-  if (attacker.status === "bleeding") {
-    attacker.hp -= Math.floor(attacker.maxHp * 0.05); // 5% bleed per turn
-    showBattleAnnouncement(`${attacker.name} suffers from bleeding!`);
-    if (attacker.hp <= 0) {
-      attacker.hp = 0;
-      updateHealthBars();
-      setTimeout(endTurn, 800); 
-      return;
-    }
-  }
-
-  if (attacker.status === "stunned") {
-    showBattleAnnouncement(`${attacker.name} is stunned and cannot move!`);
-    updateHealthBars();
-    setTimeout(endTurn, 800);
-    return;
-  }
-
-  let targetHero = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
-
-  if (attacker.status === "confuse" && Math.random() < 0.5) {
-    // 50% chance to attack self instead
-    targetHero = attacker;
-    showBattleAnnouncement(`${attacker.name} is confused and attacks themselves!`);
-  }
-
-  // Normal Attack Flow
-  const heroCard = (targetHero === attacker) ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1}) .character-image`) 
-                                             : document.querySelector(`#player-team .character-card:nth-child(${selectedHeroes.indexOf(targetHero) + 1}) .character-image`);
-
-  if (heroCard) {
-    setTimeout(() => {
-      heroCard.classList.add('hit-animation');
-      setTimeout(() => {
-        heroCard.classList.remove('hit-animation');
-      }, 500);
-    }, 200);
-  }
-
-  // Deal damage
-  let damage = 30;
-  if (targetHero.defenseBoost) {
-    damage = Math.max(10, damage - targetHero.defenseBoost);
-  }
-  targetHero.hp -= damage;
+  // 🛠 NEW: SEQUENCED ANNOUNCEMENTS
+  // 1. Announce enemy turn start
+  showBattleAnnouncement(`⚔️ ${attacker.name} is preparing to attack!`, true);
 
   setTimeout(() => {
-    if (targetHero.hurtLines && targetHero !== attacker) {
-      const randomHurtLine = targetHero.hurtLines[Math.floor(Math.random() * targetHero.hurtLines.length)];
-      showFloatingLine(randomHurtLine, "player", selectedHeroes.indexOf(targetHero));
+    // 2. Handle bleeding
+    if (attacker.status === "bleeding") {
+      attacker.hp -= Math.floor(attacker.maxHp * 0.05); // 5% bleed damage
+      showBattleAnnouncement(`💉 ${attacker.name} suffers from bleeding!`);
+      updateHealthBars();
+
+      if (attacker.hp <= 0) {
+        attacker.hp = 0;
+        updateHealthBars();
+        setTimeout(endTurn, 800);
+        return;
+      }
     }
-  }, 400);
-  showBattleAnnouncement(`💥 ${attacker.name} hit ${targetHero.name}!`, true);
-  updateHealthBars();
 
-  // Special Rasputin revive
-  if (targetHero.hp <= 0 && targetHero.name === "Grigori Rasputin" && !targetHero.ultimate.used) {
-    playMysticGlow();
-    targetHero.hp = targetHero.maxHp / 2;
-    targetHero.ultimate.used = true;
-    showBattleAnnouncement("🔮 Rasputin resurrects!");
-  }
+    // 3. Handle stunned
+    if (attacker.status === "stunned") {
+      showBattleAnnouncement(`💫 ${attacker.name} is stunned and cannot act!`);
+      updateHealthBars();
+      setTimeout(endTurn, 800);
+      return;
+    }
 
-  if (targetHero.hp <= 0) {
-    showDefeatScreen();
-    return;
-  }
+    // 4. Choose target
+    let targetHero = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
+    if (attacker.status === "confuse" && Math.random() < 0.5) {
+      targetHero = attacker;
+      showBattleAnnouncement(`🔄 ${attacker.name} is confused and attacks themselves!`);
+    }
 
-  endTurn();
+    setTimeout(() => {
+      // 5. Actual Attack
+      const heroCard = (targetHero === attacker) 
+        ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1}) .character-image`)
+        : document.querySelector(`#player-team .character-card:nth-child(${selectedHeroes.indexOf(targetHero) + 1}) .character-image`);
+
+      if (heroCard) {
+        heroCard.classList.add('hit-animation');
+        setTimeout(() => {
+          heroCard.classList.remove('hit-animation');
+        }, 500);
+      }
+
+      let damage = 30;
+      if (targetHero.defenseBoost) {
+        damage = Math.max(10, damage - targetHero.defenseBoost);
+      }
+      targetHero.hp -= damage;
+
+      setTimeout(() => {
+        if (targetHero.hurtLines && targetHero !== attacker) {
+          const randomHurtLine = targetHero.hurtLines[Math.floor(Math.random() * targetHero.hurtLines.length)];
+          showFloatingLine(randomHurtLine, "player", selectedHeroes.indexOf(targetHero));
+        }
+      }, 400);
+
+      updateHealthBars();
+
+      // Special Rasputin revive
+      if (targetHero.hp <= 0 && targetHero.name === "Grigori Rasputin" && !targetHero.ultimate.used) {
+        playMysticGlow();
+        targetHero.hp = targetHero.maxHp / 2;
+        targetHero.ultimate.used = true;
+        showBattleAnnouncement("🔮 Rasputin resurrects!");
+      }
+
+      if (targetHero.hp <= 0) {
+        showDefeatScreen();
+        return;
+      }
+
+      setTimeout(endTurn, 800); // Small pause before returning control
+    }, 800); // Delay for actual attack after status checks
+  }, 1000); // Delay after initial enemy announcement
 }
-
 
 function showBattleAnnouncement(message, skipUpdate = false) {
   const turnIndicator = document.getElementById('turn-indicator');
