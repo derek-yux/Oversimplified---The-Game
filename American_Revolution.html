@@ -1011,7 +1011,12 @@ function actuallyAttackEnemy(heroIndex, enemyIndex) {
   }
 
   // Apply damage
-  target.hp -= hero.attack;
+  let attackDamage = hero.attack;
+if (hero.doubleAttack) {
+  attackDamage *= 2;
+  hero.doubleAttack = false; // consume the boost!
+}
+target.hp -= attackDamage;
   updateHealthBars();
   if (target.hurtLines && target.hurtLines.length > 0 && target.hp > 0) {
   const randomHurtLine = target.hurtLines[Math.floor(Math.random() * target.hurtLines.length)];
@@ -1173,9 +1178,14 @@ function actuallyUseSpecialOnAlly(heroIndex, allyIndex) {
     showBattleAnnouncement(`${hero.name} heals ${ally.name} for ${special.heal} HP!`);
   }
   else if (special.type === "buff") {
+    if (special.effect === "double_next_attack") {
+    ally.doubleAttack = true; // 🛠️ set custom flag
+    showBattleAnnouncement(`${hero.name} empowers ${ally.name}'s next attack to deal double damage!`);
+  } else {
     ally.attack += special.buff.attackBoost || 0;
   ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
     showBattleAnnouncement(`${hero.name} buffs ${ally.name} with ${special.buff.attackBoost} attack!`);
+  }
   }
   else if (special.type === "buff_team") {
     selectedHeroes.forEach(h => {
