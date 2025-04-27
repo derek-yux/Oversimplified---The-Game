@@ -2219,13 +2219,18 @@ function enemyBasicAttack() {
   endTurn(); // Finally, give turn back to player
 }
 
-function showBattleAnnouncement(message, skipUpdate = false) {
-  const turnIndicator = document.getElementById('turn-indicator');
-  turnIndicator.textContent = message;
-  if (!skipUpdate) {
-    setTimeout(updateTurn, 1500);
+function showBattleAnnouncement(message, isTargeting = false) {
+  const indicator = document.getElementById('turn-indicator');
+  indicator.textContent = message;
+
+  if (!isTargeting) {
+    clearTimeout(indicator.timeoutId); // Clear any previous timer first
+    indicator.timeoutId = setTimeout(() => {
+      updateTurn();
+    }, 2000);
   }
 }
+
 
 function showCustomPopup(message) {
   const popup = document.getElementById('custom-popup');
