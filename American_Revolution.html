@@ -2059,6 +2059,8 @@ function enemyTurn() {
 if (attacker.isBoss) {
   playBossAttackAura(attackerIndex);
 }
+setTiemout(() => {
+}, 1500);
   // Highlight enemy
   document.querySelectorAll('.character-card').forEach(card => {
     card.classList.remove('active-character');
