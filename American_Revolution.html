@@ -2056,7 +2056,7 @@ function enemyTurn() {
     enemyCards[attackerIndex].classList.add('active-character');
   }
   const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
-  showFloatingLine(randomAttackLine, "enemy", attackedIndex);
+  showFloatingLine(randomAttackLine, "enemy", attackerIndex);
 
 if (attacker.isBoss) {
   playBossAttackAura(attackerIndex);
