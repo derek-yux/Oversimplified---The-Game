@@ -1168,8 +1168,8 @@ pendingHeroIndex = null;
 pendingAttackType = null;
 targetFriendly = false;
 clearHighlightFriendlyHeroes();
-  const hero = selectedHeroes[heroIndex];
-  const ally = selectedHeroes[allyIndex];
+  const hero = selectedTeam[heroIndex];
+  const ally = selectedTeam[allyIndex];
   
 
   if (!ally || ally.hp <= 0) {
@@ -1184,15 +1184,19 @@ clearHighlightFriendlyHeroes();
     showBattleAnnouncement(`${hero.name} heals ${ally.name} for ${special.heal} HP!`);
   }
   else if (special.type === "buff") {
-    if (special.effect === "double_next_attack") {
-    ally.doubleAttack = true; // 🛠️ set custom flag
-    showBattleAnnouncement(`${hero.name} empowers ${ally.name}'s next attack to deal double damage!`);
+  if (special.target === "ally_team") {
+    selectedTeam.forEach(h => {
+      h.attack += special.buff.attackBoost || 0;
+      h.defenseBoost = (h.defenseBoost || 0) + (special.buff.defenseBoost || 0);
+    });
+    playTeamBuffFlash();
+    showBattleAnnouncement(`${hero.name} buffs the entire team!`);
   } else {
     ally.attack += special.buff.attackBoost || 0;
-  ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
-    showBattleAnnouncement(`${hero.name} buffs ${ally.name} with ${special.buff.attackBoost} attack!`);
+    ally.defenseBoost = (ally.defenseBoost || 0) + (special.buff.defenseBoost || 0);
+    showBattleAnnouncement(`${hero.name} buffs ${ally.name}!`);
   }
-  }
+}
   else if (special.type === "buff_team") {
     selectedHeroes.forEach(h => {
       h.attack += special.attackBoost;
@@ -1527,8 +1531,8 @@ function showCharacterTooltip(event, character) {
     🛡️ Defense Boost: ${character.defenseBoost ? character.defenseBoost : 0}
   `;
 
-  tooltip.style.top = (event.clientY + 20) + 'px';
-  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.style.top = (event.clientY + 10) + 'px';
+  tooltip.style.left = (event.clientX + 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1538,8 +1542,8 @@ function showAttackTooltip(event, character) {
     <strong>Normal Attack</strong><br>
     Deals ${character.attack} base damage.
   `;
-  tooltip.style.top = (event.clientY + 20) + 'px';
-  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.style.top = (event.clientY + 10) + 'px';
+  tooltip.style.left = (event.clientX + 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1549,8 +1553,8 @@ function showSpecialTooltip(event, character) {
     <strong>Special Move: ${character.special.name}</strong><br>
     ${character.special.description}
   `;
-  tooltip.style.top = (event.clientY + 20) + 'px';
-  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.style.top = (event.clientY + 10) + 'px';
+  tooltip.style.left = (event.clientX + 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1575,8 +1579,8 @@ function showUltimateTooltip(event, character) {
     <em>${conditionText}</em>
   `;
 
-  tooltip.style.top = (event.clientY + 20) + 'px';
-  tooltip.style.left = (event.clientX + 20) + 'px';
+  tooltip.style.top = (event.clientY + 10) + 'px';
+  tooltip.style.left = (event.clientX + 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1587,8 +1591,8 @@ function hideTooltip() {
 document.addEventListener('mousemove', function(e) {
   const tooltip = document.getElementById('tooltip');
   if (!tooltip.classList.contains('hidden')) {
-    tooltip.style.top = (e.clientY + 20) + 'px';
-    tooltip.style.left = (e.clientX + 20) + 'px';
+    tooltip.style.top = (e.clientY + 10) + 'px';
+    tooltip.style.left = (e.clientX + 10) + 'px';
   }
 });
 
