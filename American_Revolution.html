@@ -1576,6 +1576,7 @@ function playerAttack(heroIndex) {
 
 function handleVictory(level) {
   // 1. Create colorful victory banner (full screen)
+  document.getElementById('victory-overlay').style.display = 'none';
   const overlay = document.createElement('div');
   overlay.classList.add('victory-banner');
   overlay.id = 'dynamic-victory-banner'; // ← give it an id so we can remove it later
@@ -1621,6 +1622,7 @@ function handleVictory(level) {
 document.getElementById('battle-arena').classList.add('hidden');
 
 // 🛠️ NEW - Create a clean victory message
+// After hiding old overlays, create final victory screen
 const finalVictoryScreen = document.createElement('div');
 finalVictoryScreen.id = 'final-victory-screen';
 finalVictoryScreen.style = `
@@ -1638,6 +1640,7 @@ finalVictoryScreen.style = `
   font-size: 2.5em;
   z-index: 9999;
   animation: fadeIn 1.5s ease forwards;
+  pointer-events: none; /* 👈 ADD THIS */
 `;
 finalVictoryScreen.innerHTML = `
   <h1>🏆 Victory!</h1>
@@ -1645,19 +1648,27 @@ finalVictoryScreen.innerHTML = `
 `;
 document.body.appendChild(finalVictoryScreen);
 
-
-    if (nextHero) {
+// Then after the victory pops up, finally show the Next button
+setTimeout(() => {
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.zIndex = '10001'; // 👈 make sure Next button is ABOVE the final screen
+  if (nextHero) {
       showNewHeroPopup(nextHero); // 🎉 show collectible unlock
     }
-
-    // 6. After small delay, show Next button
+    nextButton.onclick = () => {
+  const victoryScreen = document.getElementById('final-victory-screen');
+  if (victoryScreen) {
+    victoryScreen.style.transition = 'opacity 0.5s ease';
+    victoryScreen.style.opacity = '0';
     setTimeout(() => {
-      const nextButton = document.getElementById('next-button');
-      nextButton.style.display = 'block';
-      nextButton.onclick = () => {
-        window.location.href = `index.html?levelWon=${level}`;
-      };
-    }, 2500); // wait for hero popup to be seen first
+      window.location.href = `index.html?levelWon=${level}`;
+    }, 500);
+  } else {
+    window.location.href = `index.html?levelWon=${level}`;
+  }
+};
+}, 2500);
   }, 3500);
 }
 
