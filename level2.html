@@ -5,84 +5,17 @@
   <title>Level 2 - French Revolution</title>
   <link rel="icon" href="/images/shop/bucket.png">
   <style>
-        body {
+    body {
       font-family: "Arial Rounded MT Bold", Arial, sans-serif;
-      background: linear-gradient(to bottom right, #fceabb, #f8b500);
-      color: #2E282A;
+      background: #f0e6d2;
+      color: #333;
       text-align: center;
-      padding: 30px;
+      padding: 40px;
     }
 
     h1 {
       color: #E53D00;
       font-size: 2.5em;
-      margin-bottom: 20px;
-    }
-
-    .meme-area {
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      max-width: 700px;
-      margin: 20px auto;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .meme-preview {
-      background-color: #eee;
-      border-radius: 10px;
-      height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5em;
-      color: #555;
-      margin-bottom: 20px;
-      padding: 20px;
-    }
-
-    .selection-area {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    select, button {
-      padding: 10px 15px;
-      font-size: 1.2em;
-      border-radius: 8px;
-      border: 2px solid #2E282A;
-      background-color: #F0C808;
-      color: #2E282A;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    select:hover, button:hover {
-      background-color: #17BEBB;
-      color: white;
-      border-color: #17BEBB;
-    }
-
-    .meter {
-      margin-top: 20px;
-    }
-
-    .meter-bar {
-      width: 100%;
-      background-color: #ddd;
-      border-radius: 10px;
-      height: 20px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .meter-fill {
-      height: 100%;
-      background-color: #E53D00;
-      width: 50%;
-      transition: width 0.5s ease;
     }
 
     .question-box {
@@ -602,7 +535,7 @@
   z-index: 1;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 ">
-🎮 Vive la Révolution!
+🎮 Raise the Revolution!
 </button>
 <!-- ✨ Shine Swipe Element -->
 <div id="button-shine" style="
@@ -646,28 +579,19 @@ z-index: 2;
       <!-- Player heroes + action buttons -->
     </div>
   </div>
-  <div class="meme-area">
-    <div class="meme-preview" id="meme-preview">Pick a Template and Slogan</div>
-
-    <div class="selection-area">
-      <select id="template-select">
-        <option value="">-- Choose Template --</option>
-      </select>
-      <select id="slogan-select">
-        <option value="">-- Choose Slogan --</option>
-      </select>
+  <div class="stats">
+    Dude, Very Cool Points: <span id="patriot-score">50</span>/100
+    <div class="patriot-bar">
+      <div class="patriot-fill" id="patriot-fill"></div>
     </div>
-
-    <button onclick="submitMeme()">🔥 Post Meme</button>
+    <div class="timer">⏱️ Time: <span id="time-left">30</span>s</div>
   </div>
 
-  <div class="meter">
-    Revolution Meter: <span id="rev-score">50</span>/100
-    <div class="meter-bar">
-      <div class="meter-fill" id="meter-fill"></div>
-    </div>
+  <div class="question-box" id="question-box">
+    <div id="question-text">Loading debate...</div>
+    <div class="options" id="options"></div>
   </div>
-  
+
   <div class="result hidden" id="result"></div>
   <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
     Next!
@@ -677,179 +601,6 @@ z-index: 2;
     <button onclick="closeCustomPopup()" style="margin-top:15px; padding:10px 20px; background:#E53D00; color:white; border:none; border-radius:8px; cursor:pointer;">OK</button>
   </div>
   
-  <script>
-    const templates = [
-      "Marie Antoinette eating cake",
-      "The Guillotine stock photo",
-      "Angry peasants with baguettes",
-      "Napoleon falling off a tiny horse",
-      "Oversimplified Liberty Flag"
-    ];
-
-    const slogans = [
-      "Let them meme cake 🍰",
-      "Off with their heads!",
-      "Baguette justice served 🥖",
-      "Freedom tastes like revolution 🔥",
-      "When taxes hit different 💸",
-      "Storming the algorithm ⛈️"
-    ];
-
-    const funnyCombos = new Set([
-      "Marie Antoinette eating cake|Let them meme cake 🍰",
-      "The Guillotine stock photo|Off with their heads!",
-      "Angry peasants with baguettes|Baguette justice served 🥖",
-      "Oversimplified Liberty Flag|Freedom tastes like revolution 🔥",
-      "Napoleon falling off a tiny horse|Storming the algorithm ⛈️"
-    ]);
-
-    let gscore = 50;
-
-    const templateSelect = document.getElementById('template-select');
-    const sloganSelect = document.getElementById('slogan-select');
-    const memePreview = document.getElementById('meme-preview');
-    const revScore = document.getElementById('rev-score');
-    const meterFill = document.getElementById('meter-fill');
-    const resultDiv = document.getElementById('result');
-
-    templates.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t;
-      opt.textContent = t;
-      templateSelect.appendChild(opt);
-    });
-
-    slogans.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = s;
-      sloganSelect.appendChild(opt);
-    });
-
-    function submitMeme() {
-      const temp = templateSelect.value;
-      const slog = sloganSelect.value;
-
-      if (!temp || !slog) {
-        alert("Please select both a meme template and a slogan!");
-        return;
-      }
-
-      memePreview.textContent = `"${slog}" over ${temp}`;
-
-      const combo = `${temp}|${slog}`;
-      if (funnyCombos.has(combo)) {
-        gscore += 20;
-      } else {
-        gscore -= 15;
-      }
-
-      gscore = Math.min(100, Math.max(0, gscore));
-      revScore.textContent = gscore;
-      meterFill.style.width = `${gscore}%`;
-
-      if (gscore >= 100) {
-        endGame("🔥 Meme Revolution Victory! Vive la Révolution!");
-      } else if (gscore <= 0) {
-        endGame("💀 Cringe Overload. Guillotined by the Masses!");
-      }
-    }
-
-    function endGame(message) {
-      resultDiv.style.display = "block";
-      resultDiv.textContent = message;
-      document.querySelector(".selection-area").style.display = "none";
-      document.querySelector("button").disabled = true;
-      if (message.includes("Victory")) {
-    // If player won, trigger the full victory celebration!
-    playerWinsLevel8();
-  }
-    }
-    function playerWinsLevel8() {
-  console.log("Player wins Level 8!");
-
-  const victorySound = document.getElementById('victory-sound');
-  victorySound.currentTime = 0;
-  victorySound.play();
-
-  const overlay = document.getElementById('victory-overlay');
-  overlay.style.display = 'block';
-
-  const nextButton = document.getElementById('next-button');
-  nextButton.style.display = 'block';
-  nextButton.style.animation = 'pulseNext 2s infinite';
-
-  nextButton.onclick = () => {
-    window.location.href = "working.html?levelWon=8"; // ← Replace X with correct level number
-  };
-}
-
-function openChest() {
-  const chestIcon = document.getElementById('chest-icon');
-  const rewardText = document.getElementById('reward-text');
-
-  chestIcon.style.animation = 'none';
-  chestIcon.textContent = "🎉";
-  rewardText.style.display = 'block';
-
-  launchConfetti();
-
-  setTimeout(() => {
-    document.getElementById('reward-chest').style.display = 'none';
-  }, 4000);
-}
-
-function launchConfetti() {
-  const canvas = document.getElementById('confetti-canvas');
-  if (!canvas) {
-    console.warn("No confetti canvas found.");
-    return;
-  }
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  canvas.style.display = 'block';
-
-  let colors = ['#FFC700', '#FF0000', '#2E82FF', '#28A745', '#FF69B4'];
-
-  let confettiPieces = [];
-  for (let i = 0; i < 150; i++) {
-    confettiPieces.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      size: Math.random() * 8 + 2,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speedX: Math.random() * 6 - 3,
-      speedY: Math.random() * 5 + 2,
-      rotation: Math.random() * 360
-    });
-  }
-
-  function updateConfetti() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    confettiPieces.forEach(p => {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.rect(p.x, p.y, p.size, p.size);
-      ctx.fill();
-      p.x += p.speedX;
-      p.y += p.speedY;
-      p.rotation += p.speedX;
-    });
-
-    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
-
-    if (confettiPieces.length > 0) {
-      requestAnimationFrame(updateConfetti);
-    } else {
-      canvas.style.display = 'none';
-    }
-  }
-
-  updateConfetti();
-}
-
-  </script>
   <script>
     let targetFriendly = false; // NEW - whether the player should target a friendly hero
     let activeHeroIndex = 0; // Start with first hero
@@ -2620,7 +2371,7 @@ function playVictorySound() {
       });
     }
     function playerWinsLevel1() {
-  console.log("Player wins American Revolution!");
+  console.log("Player wins French Revolution!");
 
   // Play victory sound
   const victorySound = document.getElementById('victory-sound');
@@ -2645,10 +2396,11 @@ buttonShine.style.animation = 'shineMove 2s ease-out forwards';
   nextButton.onclick = () => {
     overlay.style.display = 'none';
     nextButton.style.display = 'none';
-    document.getElementById('result').classList.add('hidden');
+    document.getElementById('question-box').style.display = 'none';
+    document.querySelector('.stats').style.display = 'none';
+    // Show hero selection screen
     document.getElementById('hero-select-screen').classList.remove('hidden');
-    renderHeroSelection();
-  };
+    };
 }
 
 function endGame(message) {
@@ -2749,7 +2501,7 @@ const cutsceneTexts = [
   "1765: Britain demands money from the colonies.",
   "The Colonists say: How about... no?",
   "Britain: *angry British noises*",
-  "Thus begins the American Revolution!"
+  "Thus begins the French Revolution!"
 ];
 
 const cutsceneImages = [
@@ -2765,86 +2517,209 @@ const preloadedCutsceneImages = [];
 function preloadCutsceneImages(callback) {
   let loaded = 0;
   cutsceneImages.forEach((src, index) => {
-  const img = new Image();
-  img.src = src;
-  img.onload = () => {
-    preloadedCutsceneImages[index] = img;
-    loaded++;
-    if (loaded === cutsceneImages.length) {
-      callback();
-    }
-  };
-  img.onerror = () => {
-  console.error(`Failed to load image: ${src}`);
-  loaded++;
-  if (loaded === cutsceneImages.length) {
-    callback();
-  }
-};
-});
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      preloadedCutsceneImages[index] = img;
+      loaded++;
+      if (loaded === cutsceneImages.length) {
+        callback();
+      }
+    };
+  });
 }
 
 function startCutsceneProperly() {
   const introCutscene = document.getElementById('intro-cutscene');
   const cutsceneText = document.getElementById('cutscene-text');
   const cutsceneNextButton = document.getElementById('cutscene-next');
-  if (cutsceneNextButton) {
-  cutsceneNextButton.style.display = 'none';
-}
 
-function showSlide(index) {
-  // If we've shown all slides, show the next button
-  if (index >= cutsceneImages.length) {
+  function showSlide(index) {
+    if (index >= preloadedCutsceneImages.length) {
+  cutsceneText.style.opacity = 0;
+  setTimeout(() => {
     cutsceneNextButton.style.display = 'block';
     const buttonShine = document.getElementById('button-shine');
-    if (buttonShine) buttonShine.style.animation = 'shineMove 2s ease-out forwards';
-    return;
-  }
-
-  introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
-  cutsceneText.innerText = cutsceneTexts[index];
-
-  introCutscene.style.opacity = '0';
-  cutsceneText.style.opacity = '0';
-  setTimeout(() => {
-    introCutscene.style.transition = 'opacity 1.5s ease-in-out';
-    introCutscene.style.opacity = '1';
-    cutsceneText.style.transition = 'opacity 1.5s ease-in-out';
-    cutsceneText.style.opacity = '1';
-  }, 100);
-
-  setTimeout(() => {
-    currentCutsceneIndex++;
-    showSlide(currentCutsceneIndex);
-  }, 2500);
+buttonShine.style.animation = 'shineMove 2s ease-out forwards';
+  }, 5);
+  return;
 }
+
+    introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
+    cutsceneText.innerText = cutsceneTexts[index];
+
+    introCutscene.style.opacity = '0';
+    cutsceneText.style.opacity = '0';
+    setTimeout(() => {
+      introCutscene.style.transition = 'opacity 1.5s ease-in-out';
+      introCutscene.style.opacity = '1';
+      cutsceneText.style.transition = 'opacity 1.5s ease-in-out';
+      cutsceneText.style.opacity = '1';
+    }, 100);
+
+    setTimeout(() => {
+      currentCutsceneIndex++;
+      showSlide(currentCutsceneIndex);
+    }, 2500);
+  }
 
   showSlide(0);
 
   // Attach "Start Game" button click AFTER the elements exist
-cutsceneNextButton.addEventListener('click', () => {
-  if (introCutscene) introCutscene.style.display = 'none';
-  const questionBox = document.getElementById('question-box');
-  const stats = document.querySelector('.stats');
-  if (questionBox) questionBox.style.display = 'block';
-  if (stats) stats.style.display = 'block';
-  
-  startGame();
-});
+  cutsceneNextButton.addEventListener('click', () => {
+    introCutscene.style.display = 'none';
+    document.getElementById('question-box').style.display = 'block';
+document.querySelector('.stats').style.display = 'block';
+
+    startGame();
+  });
 }
 
 window.addEventListener('load', () => {
   // Hide normal game UI initially
   document.getElementById('question-box').style.display = 'none';
   document.querySelector('.stats').style.display = 'none';
-  alert('trying to load now!')
+
   preloadCutsceneImages(() => {
-    alert('trying to start now!')
     setTimeout(startCutsceneProperly, 300);
   });
 });
 
-  </script>
+  
+
+// French Revolution: Enhanced Meme Warfare Minigame
+const memes = [
+  {
+    options: ['images/memes/storming_bastille.png', 'images/memes/eat_cake.png'],
+    correct: 1,
+    explanation: 'The Storming of the Bastille meme resonated as the spark of the revolution, rallying citizens.'
+  },
+  {
+    options: ['images/memes/robespierre.png', 'images/memes/guillotine.png'],
+    correct: 2,
+    explanation: 'Guillotine humor symbolized radical justice, making it a viral sensation.'
+  },
+  {
+    options: ['images/memes/liberte.png', 'images/memes/egalite.png'],
+    correct: 1,
+    explanation: 'Liberté memes encapsulated the people’s yearning for freedom and spread rapidly.'
+  },
+  {
+    options: ['images/memes/fraternity.png', 'images/memes/marquis.png'],
+    correct: 1,
+    explanation: 'Fraternity-themed memes united diverse groups under a common banner.'
+  },
+  {
+    options: ['images/memes/marie_antoinette.png', 'images/memes/make_cake.png'],
+    correct: 2,
+    explanation: 'The "Let them eat cake" twist generated outrage and engagement across social circles.'
+  }
+];
+let currentMemeIndex = 0;
+const totalRounds = memes.length;
+let timerInterval;
+const roundTime = 12; // seconds per round
+
+function showMeme() {
+  clearInterval(timerInterval);
+  const questionText = document.getElementById('question-text');
+  const optionsDiv = document.getElementById('options');
+  const statsTimer = document.getElementById('time-left');
+  
+  // Show round indicator
+  questionText.innerHTML = `<strong>Round ${currentMemeIndex+1} of ${totalRounds}</strong><br/>Which meme will spark the revolution?`;
+  
+  // Display options
+  optionsDiv.innerHTML = '';
+  const m = memes[currentMemeIndex];
+  m.options.forEach((src, i) => {
+    const btn = document.createElement('button');
+    btn.classList.add('option');
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.maxWidth = '100%';
+    img.style.borderRadius = '8px';
+    btn.appendChild(img);
+    btn.onclick = () => handleMemeChoice(i+1);
+    optionsDiv.appendChild(btn);
+  });
+  
+  // Reset and start timer
+  let timeLeft = roundTime;
+  statsTimer.textContent = timeLeft;
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    statsTimer.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function handleMemeChoice(choice) {
+  clearInterval(timerInterval);
+  const m = memes[currentMemeIndex];
+  if (choice === m.correct) {
+    score += 20;
+    showBattleAnnouncement('✅ Viral hit!', false);
+  } else {
+    score -= 15;
+    showBattleAnnouncement('❌ Meme flops!', false);
+  }
+  score = Math.min(100, Math.max(0, score));
+  document.getElementById('patriot-score').textContent = score;
+  revealExplanation();
+}
+
+function handleTimeout() {
+  score -= 10;
+  showBattleAnnouncement('⏱️ Too slow!', false);
+  score = Math.max(0, score);
+  document.getElementById('patriot-score').textContent = score;
+  revealExplanation();
+}
+
+function revealExplanation() {
+  clearInterval(timerInterval);
+  const questionText = document.getElementById('question-text');
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  const m = memes[currentMemeIndex];
+  questionText.innerHTML = `<em>${m.explanation}</em>`;
+  setTimeout(() => {
+    currentMemeIndex++;
+    if (currentMemeIndex >= totalRounds) {
+      playerWinsLevel2();
+    } else {
+      showMeme();
+    }
+  }, 3000);
+}
+
+function playerWinsLevel2() {
+  clearInterval(timerInterval);
+  console.log("Player wins Enhanced Meme Warfare!");
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.onclick = () => {
+    overlay.style.display = 'none';
+    nextButton.style.display = 'none';
+    document.getElementById('question-box').style.display = 'none';
+    document.querySelector('.stats').style.display = 'none';
+    // Show hero selection screen
+    document.getElementById('hero-select-screen').classList.remove('hidden');
+    };
+}
+
+// Override the debate Q&A updateUI to start Enhanced Meme Warfare
+updateUI = showMeme;
+</script>
   <audio id="boss-arrival-sound" src="sounds/boss-arrival.mp3" preload="auto"></audio>
   <div id="boss-cutscene" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:black; color:white; font-size:2em; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
     <div style="font-size:3em;">👑 A New Challenger Appears!</div>
