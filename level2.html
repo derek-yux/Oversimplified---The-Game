@@ -1075,8 +1075,12 @@ if (type === 'enemy') {
         actuallyAttackEnemy(pendingHeroIndex, index);
       } else if (pendingAttackType === "special") {
         actuallyUseSpecialOnEnemy(pendingHeroIndex, index);
+      } else if (pendingAttackType === "special_ally") {
+        actuallyUseSpecialOnAlly(pendingHeroIndex, index);
       } else if (pendingAttackType === "ultimate") {
-        actuallyUseUltimateOnEnemy(pendingHeroIndex, index);
+        actuallyUseUltimateOnEnemies(pendingHeroIndex, index);
+      } else if (pendingAttackType === "ultimate_ally") {
+        actuallyUseUltimateOnSelfOrTeam(pendingHeroIndex, index);
       }
 
       awaitingTarget = false;
@@ -1273,6 +1277,18 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
           });
         }, 1500);
       } else if (enemyWave === 2) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Secret Boss Approaching: ROBESPIERRE (dun dun dunnn)", true);
+
+        setTimeout(() => {
+          showBossCutscene("Robespierre", () => {
+            enemies = generateEnemiesForLevel(1, 3);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 3) {
         handleVictory(1);
       }
       return;
@@ -1401,6 +1417,18 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
           });
         }, 1500);
       } else if (enemyWave === 2) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Secret Boss Approaching: ROBESPIERRE (dun dun dunnn)", true);
+
+        setTimeout(() => {
+          showBossCutscene("Robespierre", () => {
+            enemies = generateEnemiesForLevel(1, 3);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 3) {
         handleVictory(1);
       }
       return;
@@ -1468,9 +1496,21 @@ function playerAttackEnemy(enemyIndex) {
           });
         }, 1500);
       } else if (enemyWave === 2) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Secret Boss Approaching: ROBESPIERRE (dun dun dunnn)", true);
+
+        setTimeout(() => {
+          showBossCutscene("Robespierre", () => {
+            enemies = generateEnemiesForLevel(1, 3);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 3) {
         handleVictory(1);
       }
-      return; // Important: Stop further processing
+      return;
     }
   }
 
@@ -1593,6 +1633,7 @@ function playerSpecial(heroIndex) {
 
   if (special.target === "ally") {
     targetFriendly = true;
+    pendingAttackType = "special_ally";
     highlightFriendlyHeroes();
     showBattleAnnouncement("✨ Choose a teammate to heal or buff!", true);
   } else {
@@ -1633,6 +1674,7 @@ function playerUltimate(heroIndex) {
 
   if (ultimate.target.includes("ally")) {
     targetFriendly = true;
+    pendingAttackType = "ultimate_ally";
     highlightFriendlyHeroes();
     showBattleAnnouncement("✨ Choose a teammate for Ultimate!", true);
   } else {
@@ -1672,6 +1714,43 @@ function actuallyUseUltimateOnEnemies(heroIndex) {
 
   hero.ultimate.used = true;
   updateHealthBars();
+  if (target.hp <= 0) {
+    target.hp = 0;
+    updateHealthBars();
+
+    // Check victory
+    const aliveEnemies = enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
+
+        setTimeout(() => {
+          showBossCutscene("King Louis XVI", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Secret Boss Approaching: ROBESPIERRE (dun dun dunnn)", true);
+
+        setTimeout(() => {
+          showBossCutscene("Robespierre", () => {
+            enemies = generateEnemiesForLevel(1, 3);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 3) {
+        handleVictory(1);
+      }
+      return;
+    }
+  }
   endTurn();
 }
 
@@ -2320,6 +2399,7 @@ function playVictorySound() {
 }
 
     function startGame() {
+      showMeme();
       interval = setInterval(() => {
         timer--;
         timeLeft.textContent = timer;
@@ -2635,6 +2715,7 @@ window.addEventListener('load', () => {
     function checkMemeWarfareWin() {
       if (score >= 100) {
         endGame("Victory! Or Not? You Hear Heads Rolling!");
+        timeLeft = 0;
       }
     }
     
