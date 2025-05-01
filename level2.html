@@ -865,42 +865,50 @@ let unlockedHeroes = JSON.parse(localStorage.getItem('unlockedHeroes')) || [1, 2
 
 
 const bossTemplates = {
-  "Robespierre": {
-    name: "Robespierre",
-    image: "images/heroes/robespierre.png",
-    hp: 600,
-    maxHp: 600,
+  "King Louis XVI": {
+    name: "King Louis XVI",
+    image: "images/heroes/louisxvi.png",
+    hp: 400,
+    maxHp: 400,
     isBoss: true,
-    attack: 150,
+    attack: 125,
     attackLines: [
-      "FOR THE REVOLUTION!",
-      "The Reign of Terror begins!"
+    "PARTY TIME",
+    "You Want Bread? Take It!"
     ],
     hurtLines: [
-      "Traitors will perish!",
-      "You call that resistance?"
+      "ohhHhH nOooOOooooo",
+      "Rebellious scum!"
     ],
     special: {
-      name: "GUILLOTINE STRIKE",
+      name: "USELESS FLAILING!!",
       description: "200 damage to all heroes",
       turnsCooldown: 3,
       lastUsed: 0
     }
   },
-  "King Louis XVI": {
-    name: "King Louis XVI",
-    hp: 600,
-    maxHp: 600,
+  "Robespierre": {
+    name: "Robespierrre",
+    image: "images/heores/robespierre.png",
+    hp: 555,
+    maxHp: 55,
     isBoss: true,
-    attack: 60,
+    attack: 150,
+    attackLines: [
+    "OFF WITH YOUR HEAD",
+    "Anti-Revolutionary!"
+    ],
+    hurtLines: [
+      "How dare you!",
+      "You will be put down!"
+    ],
     special: {
-      name: "Royal Decree",
-      description: "Heals self 100 HP",
-      turnsCooldown: 4,
+      name: "REIGN OF TERROR",
+      description: "250 damage to all heroes",
+      turnsCooldown: 3,
       lastUsed: 0
     }
   }
-  // Add more bosses here!
 };
 
     let score = 50;
@@ -1009,33 +1017,32 @@ target.hp -= attackDamage;
     const aliveEnemies = enemies.filter(e => e.hp > 0);
     if (aliveEnemies.length === 0) {
       if (enemyWave === 1) {
-  enemyWave = 2;
-  showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
 
-  setTimeout(() => {
-    showBossCutscene("King Louis XVI", () => {
-      enemies = [Object.assign({}, bossTemplates["King Louis XVI"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 2) {
-  enemyWave = 3;
-  showBattleAnnouncement("☠️ A New Challenger Approaches: Robespierre!", true);
+        setTimeout(() => {
+          showBossCutscene("King Louis XVI", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Secret Boss Approaching: ROBESPIERRE (dun dun dunnn)", true);
 
-  setTimeout(() => {
-    showBossCutscene("Robespierre", () => {
-      enemies = [Object.assign({}, bossTemplates["Robespierre"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 3) {
-  handleVictory(2);
-}
-
+        setTimeout(() => {
+          showBossCutscene("Robespierre", () => {
+            enemies = generateEnemiesForLevel(1, 3);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 3) {
+        handleVictory(1);
+      }
       return;
     }
   }
@@ -1254,33 +1261,20 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
     const aliveEnemies = enemies.filter(e => e.hp > 0);
     if (aliveEnemies.length === 0) {
       if (enemyWave === 1) {
-  enemyWave = 2;
-  showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
 
-  setTimeout(() => {
-    showBossCutscene("King Louis XVI", () => {
-      enemies = [Object.assign({}, bossTemplates["King Louis XVI"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 2) {
-  enemyWave = 3;
-  showBattleAnnouncement("☠️ A New Challenger Approaches: Robespierre!", true);
-
-  setTimeout(() => {
-    showBossCutscene("Robespierre", () => {
-      enemies = [Object.assign({}, bossTemplates["Robespierre"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 3) {
-  handleVictory(2);
-}
-
+        setTimeout(() => {
+          showBossCutscene("King Louis XVI", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
       return;
     }
   }
@@ -1395,33 +1389,20 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
     const aliveEnemies = enemies.filter(e => e.hp > 0);
     if (aliveEnemies.length === 0) {
       if (enemyWave === 1) {
-  enemyWave = 2;
-  showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
 
-  setTimeout(() => {
-    showBossCutscene("King Louis XVI", () => {
-      enemies = [Object.assign({}, bossTemplates["King Louis XVI"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 2) {
-  enemyWave = 3;
-  showBattleAnnouncement("☠️ A New Challenger Approaches: Robespierre!", true);
-
-  setTimeout(() => {
-    showBossCutscene("Robespierre", () => {
-      enemies = [Object.assign({}, bossTemplates["Robespierre"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 3) {
-  handleVictory(1);
-}
-
+        setTimeout(() => {
+          showBossCutscene("King Louis XVI", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
       return;
     }
   }
@@ -1475,33 +1456,20 @@ function playerAttackEnemy(enemyIndex) {
     const aliveEnemies = enemies.filter(e => e.hp > 0);
     if (aliveEnemies.length === 0) {
       if (enemyWave === 1) {
-  enemyWave = 2;
-  showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
+        enemyWave = 2;
+        showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
 
-  setTimeout(() => {
-    showBossCutscene("King Louis XVI", () => {
-      enemies = [Object.assign({}, bossTemplates["King Louis XVI"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 2) {
-  enemyWave = 3;
-  showBattleAnnouncement("🪓 Plot twist: It’s Robespierre time!", true);
-
-  setTimeout(() => {
-    showBossCutscene("Robespierre", () => {
-      enemies = [Object.assign({}, bossTemplates["Robespierre"])];
-      renderBattleArena();
-      isPlayerTurn = true;
-      updateTurn();
-    });
-  }, 1500);
-} else if (enemyWave === 3) {
-  handleVictory(1);
-}
-
+        setTimeout(() => {
+          showBossCutscene("King Louis XVI", () => {
+            enemies = generateEnemiesForLevel(1, 2);
+            renderBattleArena();
+            isPlayerTurn = true;
+            updateTurn();
+          });
+        }, 1500);
+      } else if (enemyWave === 2) {
+        handleVictory(1);
+      }
       return; // Important: Stop further processing
     }
   }
@@ -2068,7 +2036,7 @@ function enemyTurn() {
   const aliveEnemies = enemies.filter(e => e.hp > 0);
 
   if (aliveEnemies.length === 0) {
-    handleVictory(2);
+    handleVictory(1);
     return;
   }
 
@@ -2305,15 +2273,15 @@ function playMysticGlow() {
 function useEnemySpecial(boss) {
   const announcement = document.getElementById('turn-indicator');
 
-  if (boss.name === "King George III") {
+  if (boss.name === "King Louis XVI") {
     // TAX THEM ALL: damage all players
-    announcement.textContent = "👑 King George III uses TAX THEM ALL!";
+    announcement.textContent = "👑 King Louis XVI uses TAX THEM ALL!";
     selectedTeam.forEach(hero => {
       hero.hp -= 200;
     });
-  } else if (boss.name === "King Louis XVI") {
+  } else if (boss.name === "Robespierre") {
     // Heal himself
-    announcement.textContent = "👑 King Louis XVI uses Royal Decree!";
+    announcement.textContent = "Robespierre launches his Reign of Terror!!";
     boss.hp = Math.min(boss.maxHp, boss.hp + 100);
   }
 
@@ -2322,19 +2290,17 @@ function useEnemySpecial(boss) {
 
 
 function generateEnemiesForLevel(level, wave) {
-  if (level === 2 && wave === 1) {
+  if (level === 1 && wave === 1) {
     return [
-      { name: "French Guard", hp: 100, maxHp: 100, attack: 30,  image: "images/bosses/britishsoldier.png" },
-      { name: "French Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" },
-      { name: "French Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" }
+      { name: "French Guard", hp: 100, maxHp: 100, attack: 40,  image: "images/bosses/britishsoldier.png" },
+      { name: "French Guard", hp: 100, maxHp: 100, attack: 40, image: "images/bosses/britishsoldier.png" },
+      { name: "French Guard", hp: 100, maxHp: 100, attack: 40, image: "images/bosses/britishsoldier.png" }
     ];
   }
-  if (level === 2 && wave === 2) {
-    // 🛠️ Use the full King George III template
+  if (level === 1 && wave === 2) {
     return [{ ...bossTemplates["King Louis XVI"] }];
   }
-  if (level === 2 && wave === 3) {
-    // 🛠️ Use the full King George III template
+  if (level === 1 && wave === 3) {
     return [{ ...bossTemplates["Robespierre"] }];
   }
   return [];
@@ -2354,18 +2320,17 @@ function playVictorySound() {
 }
 
     function startGame() {
-      updateUI();
       interval = setInterval(() => {
         timer--;
         timeLeft.textContent = timer;
         if (timer <= 0) {
-          endGame("Out of time! King George wins. 👑");
+          endGame("Out of time! King Louis wins. 👑");
         }
       }, 1000);
     }
 
-    function playerWinsLevel2() {
-  console.log("Player wins French Revolution!");
+    function playerWinsLevel1() {
+  console.log("Player wins American Revolution!");
 
   // Play victory sound
   const victorySound = document.getElementById('victory-sound');
@@ -2390,11 +2355,10 @@ buttonShine.style.animation = 'shineMove 2s ease-out forwards';
   nextButton.onclick = () => {
     overlay.style.display = 'none';
     nextButton.style.display = 'none';
-    document.getElementById('question-box').style.display = 'none';
-    document.querySelector('.stats').style.display = 'none';
-    // Show hero selection screen
+    document.getElementById('result').classList.add('hidden');
     document.getElementById('hero-select-screen').classList.remove('hidden');
-    };
+    renderHeroSelection();
+  };
 }
 
 function endGame(message) {
@@ -2405,7 +2369,7 @@ function endGame(message) {
 
   if (message.includes("Victory")) {
     // If player won, trigger the full victory celebration!
-    playerWinsLevel2();
+    playerWinsLevel1();
   }
 }
 function renderHeroSelection() {
@@ -2492,10 +2456,10 @@ function showBossCutscene(bossName, callback) {
   }, 2000); // Show for 2 seconds, then hide and continue
 }
 const cutsceneTexts = [
-  "1789: Bread's expensive. People are angry.",
-  "They storm the Bastille... and find like, 7 prisoners.",
-  "Louis XVI: *munches croissant nervously*",
-  "Robespierre: 'Trust me, it'll be fine.' (It was not fine.)"
+  "Hon Hon Hon! No Bread! Boo Monarchy!",
+  "1789: The (Pretty Pointless) Storming of the Bastille",
+  "King Louis XVI: *ohHhHh noOoOooOoo*",
+  "Any Mistake..And We Could Have A Reign of Terror!"
 ];
 
 const cutsceneImages = [
@@ -2579,145 +2543,130 @@ window.addEventListener('load', () => {
   });
 });
 
-  
+  </script>
+  <script>
 
-// French Revolution: Enhanced Meme Warfare Minigame
-const memes = [
-  {
-    options: ['images/memes/storming_bastille.png', 'images/memes/eat_cake.png'],
-    correct: 1,
-    explanation: 'The Storming of the Bastille meme resonated as the spark of the revolution, rallying citizens.'
-  },
-  {
-    options: ['images/memes/robespierre.png', 'images/memes/guillotine.png'],
-    correct: 2,
-    explanation: 'Guillotine humor symbolized radical justice, making it a viral sensation.'
-  },
-  {
-    options: ['images/memes/liberte.png', 'images/memes/egalite.png'],
-    correct: 1,
-    explanation: 'Liberté memes encapsulated the people’s yearning for freedom and spread rapidly.'
-  },
-  {
-    options: ['images/memes/fraternity.png', 'images/memes/marquis.png'],
-    correct: 1,
-    explanation: 'Fraternity-themed memes united diverse groups under a common banner.'
-  },
-  {
-    options: ['images/memes/marie_antoinette.png', 'images/memes/make_cake.png'],
-    correct: 2,
-    explanation: 'The "Let them eat cake" twist generated outrage and engagement across social circles.'
-  }
-];
-let currentMemeIndex = 0;
-const totalRounds = memes.length;
-let timerInterval;
-const roundTime = 12; // seconds per round
-
-function showMeme() {
-  clearInterval(timerInterval);
-  const questionText = document.getElementById('question-text');
-  const optionsDiv = document.getElementById('options');
-  const statsTimer = document.getElementById('time-left');
-  
-  // Show round indicator
-  questionText.innerHTML = `<strong>Round ${currentMemeIndex+1} of ${totalRounds}</strong><br/>Which meme will spark the revolution?`;
-  
-  // Display options
-  optionsDiv.innerHTML = '';
-  const m = memes[currentMemeIndex];
-  m.options.forEach((src, i) => {
-    const btn = document.createElement('button');
-    btn.classList.add('option');
-    const img = document.createElement('img');
-    img.src = src;
-    img.style.maxWidth = '100%';
-    img.style.borderRadius = '8px';
-    btn.appendChild(img);
-    btn.onclick = () => handleMemeChoice(i+1);
-    optionsDiv.appendChild(btn);
-  });
-  
-  // Reset and start timer
-  let timeLeft = roundTime;
-  statsTimer.textContent = timeLeft;
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    statsTimer.textContent = timeLeft;
-    if (timeLeft <= 0) {
+    // French Revolution: Enhanced Meme Warfare Minigame
+    const memes = [
+      {
+        options: ['images/memes/storming_bastille.png', 'images/memes/eat_cake.png'],
+        correct: 1,
+        explanation: 'The Storming of the Bastille meme resonated as the spark of the revolution, rallying citizens.'
+      },
+      {
+        options: ['images/memes/robespierre.png', 'images/memes/guillotine.png'],
+        correct: 2,
+        explanation: 'Guillotine humor symbolized radical justice, making it a viral sensation.'
+      },
+      {
+        options: ['images/memes/liberte.png', 'images/memes/egalite.png'],
+        correct: 1,
+        explanation: 'Liberté memes encapsulated the people’s yearning for freedom and spread rapidly.'
+      },
+      {
+        options: ['images/memes/fraternity.png', 'images/memes/marquis.png'],
+        correct: 1,
+        explanation: 'Fraternity-themed memes united diverse groups under a common banner.'
+      },
+      {
+        options: ['images/memes/marie_antoinette.png', 'images/memes/make_cake.png'],
+        correct: 2,
+        explanation: 'The "Let them eat cake" twist generated outrage and engagement across social circles.'
+      }
+    ];
+    let currentMemeIndex = 0;
+    const totalRounds = memes.length;
+    let timerInterval;
+    const roundTime = 12; // seconds per round
+    
+    function showMeme() {
       clearInterval(timerInterval);
-      handleTimeout();
+      const questionText = document.getElementById('question-text');
+      const optionsDiv = document.getElementById('options');
+      const statsTimer = document.getElementById('time-left');
+      
+      // Show round indicator
+      questionText.innerHTML = `<strong>Round ${currentMemeIndex+1} of ${totalRounds}</strong><br/>Which meme will spark the revolution?`;
+      
+      // Display options
+      optionsDiv.innerHTML = '';
+      const m = memes[currentMemeIndex];
+      m.options.forEach((src, i) => {
+        const btn = document.createElement('button');
+        btn.classList.add('option');
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '8px';
+        btn.appendChild(img);
+        btn.onclick = () => handleMemeChoice(i+1);
+        optionsDiv.appendChild(btn);
+      });
+      
+      // Reset and start timer
+      let timeLeft = roundTime;
+      statsTimer.textContent = timeLeft;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        statsTimer.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          handleTimeout();
+        }
+      }, 1000);
     }
-  }, 1000);
-}
-
-function handleMemeChoice(choice) {
-  clearInterval(timerInterval);
-  const m = memes[currentMemeIndex];
-  if (choice === m.correct) {
-    score += 20;
-    showBattleAnnouncement('✅ Viral hit!', false);
-  } else {
-    score -= 15;
-    showBattleAnnouncement('❌ Meme flops!', false);
-  }
-  score = Math.min(100, Math.max(0, score));
-  document.getElementById('patriot-score').textContent = score;
-  revealExplanation();
-}
-
-function handleTimeout() {
-  score -= 10;
-  showBattleAnnouncement('⏱️ Too slow!', false);
-  score = Math.max(0, score);
-  document.getElementById('patriot-score').textContent = score;
-  revealExplanation();
-}
-
-function revealExplanation() {
-  clearInterval(timerInterval);
-  const questionText = document.getElementById('question-text');
-  const optionsDiv = document.getElementById('options');
-  optionsDiv.innerHTML = '';
-  const m = memes[currentMemeIndex];
-  questionText.innerHTML = `<em>${m.explanation}</em>`;
-  setTimeout(() => {
-    currentMemeIndex++;
-    if (currentMemeIndex >= totalRounds) {
-      playerWinsLevel2();
-    } else {
-      showMeme();
+    
+    function handleMemeChoice(choice) {
+      clearInterval(timerInterval);
+      const m = memes[currentMemeIndex];
+      if (choice === m.correct) {
+        score += 20;
+        showBattleAnnouncement('✅ Viral hit!', false);
+      } else {
+        score -= 15;
+        showBattleAnnouncement('❌ Meme flops!', false);
+      }
+      score = Math.min(100, Math.max(0, score));
+      document.getElementById('patriot-score').textContent = score;
+      revealExplanation();
+      checkMemeWarfareWin();
     }
-  }, 3000);
-}
 
-function playerWinsLevel2() {
-  clearInterval(timerInterval);
-  console.log("Player wins Enhanced Meme Warfare!");
-  const victorySound = document.getElementById('victory-sound');
-  victorySound.currentTime = 0;
-  victorySound.play();
-  const overlay = document.getElementById('victory-overlay');
-  overlay.style.display = 'block';
-  const nextButton = document.getElementById('next-button');
-  nextButton.style.display = 'block';
-  nextButton.onclick = () => {
-    overlay.style.display = 'none';
-    nextButton.style.display = 'none';
-    document.getElementById('question-box').style.display = 'none';
-    document.querySelector('.stats').style.display = 'none';
-    // Show hero selection screen
-    document.getElementById('hero-select-screen').classList.remove('hidden');
-    };
-}
-
-// Override the debate Q&A updateUI to start Enhanced Meme Warfare
-updateUI = showMeme;
-</script>
+    function checkMemeWarfareWin() {
+      if (score >= 100) {
+        endGame("Victory! Or Not? You Hear Heads Rolling!");
+      }
+    }
+    
+    function handleTimeout() {
+      score -= 10;
+      showBattleAnnouncement('⏱️ Too slow!', false);
+      score = Math.max(0, score);
+      document.getElementById('patriot-score').textContent = score;
+      revealExplanation();
+    }
+    
+    function revealExplanation() {
+      clearInterval(timerInterval);
+      const questionText = document.getElementById('question-text');
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+      const m = memes[currentMemeIndex];
+      questionText.innerHTML = `<em>${m.explanation}</em>`;
+      setTimeout(() => {
+        currentMemeIndex++;
+        if (currentMemeIndex >= totalRounds) {
+          playerWinsLevel1();
+        } else {
+          showMeme();
+        }
+      }, 3000);
+    }
+    </script>
   <audio id="boss-arrival-sound" src="sounds/boss-arrival.mp3" preload="auto"></audio>
   <div id="boss-cutscene" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:black; color:white; font-size:2em; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
     <div style="font-size:3em;">👑 A New Challenger Appears!</div>
-    <div id="boss-name" style="margin-top:20px;">King George III</div>
+    <div id="boss-name" style="margin-top:20px;">King Louis XVI</div>
   </div>
 </body>
 </html>
