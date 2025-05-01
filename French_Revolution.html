@@ -232,7 +232,7 @@
       "Napoleon falling off a tiny horse|Storming the algorithm ⛈️"
     ]);
 
-    let score = 50;
+    let gscore = 50;
 
     const templateSelect = document.getElementById('template-select');
     const sloganSelect = document.getElementById('slogan-select');
@@ -268,18 +268,18 @@
 
       const combo = `${temp}|${slog}`;
       if (funnyCombos.has(combo)) {
-        score += 20;
+        gscore += 20;
       } else {
-        score -= 15;
+        gscore -= 15;
       }
 
-      score = Math.min(100, Math.max(0, score));
-      revScore.textContent = score;
-      meterFill.style.width = `${score}%`;
+      gscore = Math.min(100, Math.max(0, gscore));
+      revScore.textContent = gscore;
+      meterFill.style.width = `${gscore}%`;
 
-      if (score >= 100) {
+      if (gscore >= 100) {
         endGame("🔥 Meme Revolution Victory! Vive la Révolution!");
-      } else if (score <= 0) {
+      } else if (gscore <= 0) {
         endGame("💀 Cringe Overload. Guillotined by the Masses!");
       }
     }

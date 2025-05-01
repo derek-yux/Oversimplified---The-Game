@@ -2,20 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Level 1 - American Revolution</title>
+  <title>Level 2 - French Revolution</title>
   <link rel="icon" href="/images/shop/bucket.png">
   <style>
-    body {
+        body {
       font-family: "Arial Rounded MT Bold", Arial, sans-serif;
-      background: #f0e6d2;
-      color: #333;
+      background: linear-gradient(to bottom right, #fceabb, #f8b500);
+      color: #2E282A;
       text-align: center;
-      padding: 40px;
+      padding: 30px;
     }
 
     h1 {
       color: #E53D00;
       font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    .meme-area {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 700px;
+      margin: 20px auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .meme-preview {
+      background-color: #eee;
+      border-radius: 10px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      color: #555;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    .selection-area {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    select, button {
+      padding: 10px 15px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      border: 2px solid #2E282A;
+      background-color: #F0C808;
+      color: #2E282A;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    select:hover, button:hover {
+      background-color: #17BEBB;
+      color: white;
+      border-color: #17BEBB;
+    }
+
+    .meter {
+      margin-top: 20px;
+    }
+
+    .meter-bar {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 10px;
+      height: 20px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background-color: #E53D00;
+      width: 50%;
+      transition: width 0.5s ease;
     }
 
     .question-box {
@@ -535,7 +602,7 @@
   z-index: 1;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 ">
-🎮 Raise the Revolution!
+🎮 Vive la Révolution!
 </button>
 <!-- ✨ Shine Swipe Element -->
 <div id="button-shine" style="
@@ -558,7 +625,7 @@ z-index: 2;
     </div>    
     <audio id="victory-sound" src="https://cdn.pixabay.com/audio/2022/03/26/audio_bfb4b67960.mp3" preload="auto"></audio>
       
-  <h1>Rhetoric Duel: American Revolution 🇺🇸</h1>
+  <h1>Meme Warfare: French Revolution 🇫🇷</h1>
   <div id="hero-select-screen" class="hidden">
     <h2>Pick 3 Heroes!</h2>
     <div id="hero-list"></div>
@@ -579,19 +646,28 @@ z-index: 2;
       <!-- Player heroes + action buttons -->
     </div>
   </div>
-  <div class="stats">
-    Patriot Points: <span id="patriot-score">50</span>/100
-    <div class="patriot-bar">
-      <div class="patriot-fill" id="patriot-fill"></div>
+  <div class="meme-area">
+    <div class="meme-preview" id="meme-preview">Pick a Template and Slogan</div>
+
+    <div class="selection-area">
+      <select id="template-select">
+        <option value="">-- Choose Template --</option>
+      </select>
+      <select id="slogan-select">
+        <option value="">-- Choose Slogan --</option>
+      </select>
     </div>
-    <div class="timer">⏱️ Time: <span id="time-left">30</span>s</div>
+
+    <button onclick="submitMeme()">🔥 Post Meme</button>
   </div>
 
-  <div class="question-box" id="question-box">
-    <div id="question-text">Loading debate...</div>
-    <div class="options" id="options"></div>
+  <div class="meter">
+    Revolution Meter: <span id="rev-score">50</span>/100
+    <div class="meter-bar">
+      <div class="meter-fill" id="meter-fill"></div>
+    </div>
   </div>
-
+  
   <div class="result hidden" id="result"></div>
   <button id="next-button" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:1.5em; background-color:#F0C808; color:#2E282A; border:none; border-radius:10px; cursor:pointer;">
     Next!
@@ -601,6 +677,179 @@ z-index: 2;
     <button onclick="closeCustomPopup()" style="margin-top:15px; padding:10px 20px; background:#E53D00; color:white; border:none; border-radius:8px; cursor:pointer;">OK</button>
   </div>
   
+  <script>
+    const templates = [
+      "Marie Antoinette eating cake",
+      "The Guillotine stock photo",
+      "Angry peasants with baguettes",
+      "Napoleon falling off a tiny horse",
+      "Oversimplified Liberty Flag"
+    ];
+
+    const slogans = [
+      "Let them meme cake 🍰",
+      "Off with their heads!",
+      "Baguette justice served 🥖",
+      "Freedom tastes like revolution 🔥",
+      "When taxes hit different 💸",
+      "Storming the algorithm ⛈️"
+    ];
+
+    const funnyCombos = new Set([
+      "Marie Antoinette eating cake|Let them meme cake 🍰",
+      "The Guillotine stock photo|Off with their heads!",
+      "Angry peasants with baguettes|Baguette justice served 🥖",
+      "Oversimplified Liberty Flag|Freedom tastes like revolution 🔥",
+      "Napoleon falling off a tiny horse|Storming the algorithm ⛈️"
+    ]);
+
+    let gscore = 50;
+
+    const templateSelect = document.getElementById('template-select');
+    const sloganSelect = document.getElementById('slogan-select');
+    const memePreview = document.getElementById('meme-preview');
+    const revScore = document.getElementById('rev-score');
+    const meterFill = document.getElementById('meter-fill');
+    const resultDiv = document.getElementById('result');
+
+    templates.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      templateSelect.appendChild(opt);
+    });
+
+    slogans.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      sloganSelect.appendChild(opt);
+    });
+
+    function submitMeme() {
+      const temp = templateSelect.value;
+      const slog = sloganSelect.value;
+
+      if (!temp || !slog) {
+        alert("Please select both a meme template and a slogan!");
+        return;
+      }
+
+      memePreview.textContent = `"${slog}" over ${temp}`;
+
+      const combo = `${temp}|${slog}`;
+      if (funnyCombos.has(combo)) {
+        gscore += 20;
+      } else {
+        gscore -= 15;
+      }
+
+      gscore = Math.min(100, Math.max(0, gscore));
+      revScore.textContent = gscore;
+      meterFill.style.width = `${gscore}%`;
+
+      if (gscore >= 100) {
+        endGame("🔥 Meme Revolution Victory! Vive la Révolution!");
+      } else if (gscore <= 0) {
+        endGame("💀 Cringe Overload. Guillotined by the Masses!");
+      }
+    }
+
+    function endGame(message) {
+      resultDiv.style.display = "block";
+      resultDiv.textContent = message;
+      document.querySelector(".selection-area").style.display = "none";
+      document.querySelector("button").disabled = true;
+      if (message.includes("Victory")) {
+    // If player won, trigger the full victory celebration!
+    playerWinsLevel8();
+  }
+    }
+    function playerWinsLevel8() {
+  console.log("Player wins Level 8!");
+
+  const victorySound = document.getElementById('victory-sound');
+  victorySound.currentTime = 0;
+  victorySound.play();
+
+  const overlay = document.getElementById('victory-overlay');
+  overlay.style.display = 'block';
+
+  const nextButton = document.getElementById('next-button');
+  nextButton.style.display = 'block';
+  nextButton.style.animation = 'pulseNext 2s infinite';
+
+  nextButton.onclick = () => {
+    window.location.href = "working.html?levelWon=8"; // ← Replace X with correct level number
+  };
+}
+
+function openChest() {
+  const chestIcon = document.getElementById('chest-icon');
+  const rewardText = document.getElementById('reward-text');
+
+  chestIcon.style.animation = 'none';
+  chestIcon.textContent = "🎉";
+  rewardText.style.display = 'block';
+
+  launchConfetti();
+
+  setTimeout(() => {
+    document.getElementById('reward-chest').style.display = 'none';
+  }, 4000);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) {
+    console.warn("No confetti canvas found.");
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  let colors = ['#FFC700', '#FF0000', '#2E82FF', '#28A745', '#FF69B4'];
+
+  let confettiPieces = [];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 8 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 6 - 3,
+      speedY: Math.random() * 5 + 2,
+      rotation: Math.random() * 360
+    });
+  }
+
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(p.x, p.y, p.size, p.size);
+      ctx.fill();
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.speedX;
+    });
+
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+
+    if (confettiPieces.length > 0) {
+      requestAnimationFrame(updateConfetti);
+    } else {
+      canvas.style.display = 'none';
+    }
+  }
+
+  updateConfetti();
+}
+
+  </script>
   <script>
     let targetFriendly = false; // NEW - whether the player should target a friendly hero
     let activeHeroIndex = 0; // Start with first hero
