@@ -2322,16 +2322,20 @@ function useEnemySpecial(boss) {
 
 
 function generateEnemiesForLevel(level, wave) {
-  if (level === 1 && wave === 1) {
+  if (level === 2 && wave === 1) {
     return [
       { name: "French Guard", hp: 100, maxHp: 100, attack: 30,  image: "images/bosses/britishsoldier.png" },
       { name: "French Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" },
       { name: "French Guard", hp: 100, maxHp: 100, attack: 30, image: "images/bosses/britishsoldier.png" }
     ];
   }
-  if (level === 1 && wave === 2) {
+  if (level === 2 && wave === 2) {
     // 🛠️ Use the full King George III template
-    return [{ ...bossTemplates["King George III"] }];
+    return [{ ...bossTemplates["King Louis XVI"] }];
+  }
+  if (level === 2 && wave === 3) {
+    // 🛠️ Use the full King George III template
+    return [{ ...bossTemplates["Robespierre"] }];
   }
   return [];
 }
