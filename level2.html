@@ -2774,6 +2774,13 @@ function preloadCutsceneImages(callback) {
       callback();
     }
   };
+  img.onerror = () => {
+  console.error(`Failed to load image: ${src}`);
+  loaded++;
+  if (loaded === cutsceneImages.length) {
+    callback();
+  }
+};
 });
 }
 
@@ -2781,17 +2788,23 @@ function startCutsceneProperly() {
   const introCutscene = document.getElementById('intro-cutscene');
   const cutsceneText = document.getElementById('cutscene-text');
   const cutsceneNextButton = document.getElementById('cutscene-next');
+  if (cutsceneNextButton) {
+  cutsceneNextButton.style.display = 'none';
+}
 
   function showSlide(index) {
-    if (index >= preloadedCutsceneImages.length) {
-  cutsceneText.style.opacity = 0;
-  setTimeout(() => {
-    cutsceneNextButton.style.display = 'block';
-    const buttonShine = document.getElementById('button-shine');
-buttonShine.style.animation = 'shineMove 2s ease-out forwards';
-  }, 5);
-  return;
-}
+    if (index >= cutsceneImages.length) {
+    introCutscene.style.opacity = '1';  // Keep background visible
+    cutsceneText.style.opacity = '0';   // Fade out text
+    setTimeout(() => {
+      cutsceneNextButton.style.display = 'block';
+      const buttonShine = document.getElementById('button-shine');
+      if (buttonShine) {
+        buttonShine.style.animation = 'shineMove 2s ease-out forwards';
+      }
+    }, 1000);  // Give text time to fade out before showing button
+    return;
+  }
 
     introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
     cutsceneText.innerText = cutsceneTexts[index];
@@ -2814,13 +2827,15 @@ buttonShine.style.animation = 'shineMove 2s ease-out forwards';
   showSlide(0);
 
   // Attach "Start Game" button click AFTER the elements exist
-  cutsceneNextButton.addEventListener('click', () => {
-    introCutscene.style.display = 'none';
-    document.getElementById('question-box').style.display = 'block';
-document.querySelector('.stats').style.display = 'block';
-
-    startGame();
-  });
+cutsceneNextButton.addEventListener('click', () => {
+  if (introCutscene) introCutscene.style.display = 'none';
+  const questionBox = document.getElementById('question-box');
+  const stats = document.querySelector('.stats');
+  if (questionBox) questionBox.style.display = 'block';
+  if (stats) stats.style.display = 'block';
+  
+  startGame();
+});
 }
 
 window.addEventListener('load', () => {
