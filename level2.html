@@ -2792,37 +2792,32 @@ function startCutsceneProperly() {
   cutsceneNextButton.style.display = 'none';
 }
 
-  function showSlide(index) {
-    if (index >= cutsceneImages.length) {
-    introCutscene.style.opacity = '1';  // Keep background visible
-    cutsceneText.style.opacity = '0';   // Fade out text
-    setTimeout(() => {
-      cutsceneNextButton.style.display = 'block';
-      const buttonShine = document.getElementById('button-shine');
-      if (buttonShine) {
-        buttonShine.style.animation = 'shineMove 2s ease-out forwards';
-      }
-    }, 1000);  // Give text time to fade out before showing button
+function showSlide(index) {
+  // If we've shown all slides, show the next button
+  if (index >= cutsceneImages.length) {
+    cutsceneNextButton.style.display = 'block';
+    const buttonShine = document.getElementById('button-shine');
+    if (buttonShine) buttonShine.style.animation = 'shineMove 2s ease-out forwards';
     return;
   }
 
-    introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
-    cutsceneText.innerText = cutsceneTexts[index];
+  introCutscene.style.backgroundImage = `url(${preloadedCutsceneImages[index].src})`;
+  cutsceneText.innerText = cutsceneTexts[index];
 
-    introCutscene.style.opacity = '0';
-    cutsceneText.style.opacity = '0';
-    setTimeout(() => {
-      introCutscene.style.transition = 'opacity 1.5s ease-in-out';
-      introCutscene.style.opacity = '1';
-      cutsceneText.style.transition = 'opacity 1.5s ease-in-out';
-      cutsceneText.style.opacity = '1';
-    }, 100);
+  introCutscene.style.opacity = '0';
+  cutsceneText.style.opacity = '0';
+  setTimeout(() => {
+    introCutscene.style.transition = 'opacity 1.5s ease-in-out';
+    introCutscene.style.opacity = '1';
+    cutsceneText.style.transition = 'opacity 1.5s ease-in-out';
+    cutsceneText.style.opacity = '1';
+  }, 100);
 
-    setTimeout(() => {
-      currentCutsceneIndex++;
-      showSlide(currentCutsceneIndex);
-    }, 2500);
-  }
+  setTimeout(() => {
+    currentCutsceneIndex++;
+    showSlide(currentCutsceneIndex);
+  }, 2500);
+}
 
   showSlide(0);
 
@@ -2846,6 +2841,17 @@ window.addEventListener('load', () => {
   preloadCutsceneImages(() => {
     setTimeout(startCutsceneProperly, 300);
   });
+  setTimeout(() => {
+    if (document.getElementById('question-box').style.display === 'none') {
+      console.log("Failsafe triggered: Starting game");
+      document.getElementById('intro-cutscene').style.display = 'none';
+      document.getElementById('question-box').style.display = 'block';
+      document.querySelector('.stats').style.display = 'block';
+      alert('game starting now!')
+      startGame();
+      alert('game started!')
+    }
+  }, 3000);
 });
 
   </script>
