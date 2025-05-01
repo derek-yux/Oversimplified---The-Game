@@ -2837,21 +2837,11 @@ window.addEventListener('load', () => {
   // Hide normal game UI initially
   document.getElementById('question-box').style.display = 'none';
   document.querySelector('.stats').style.display = 'none';
-
+  alert('trying to load now!')
   preloadCutsceneImages(() => {
+    alert('trying to start now!')
     setTimeout(startCutsceneProperly, 300);
   });
-  setTimeout(() => {
-    if (document.getElementById('question-box').style.display === 'none') {
-      console.log("Failsafe triggered: Starting game");
-      document.getElementById('intro-cutscene').style.display = 'none';
-      document.getElementById('question-box').style.display = 'block';
-      document.querySelector('.stats').style.display = 'block';
-      alert('game starting now!')
-      startGame();
-      alert('game started!')
-    }
-  }, 3000);
 });
 
   </script>
