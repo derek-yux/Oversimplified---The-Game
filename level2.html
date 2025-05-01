@@ -2764,30 +2764,17 @@ const preloadedCutsceneImages = [];
 
 function preloadCutsceneImages(callback) {
   let loaded = 0;
-  let failed = 0;
-
   cutsceneImages.forEach((src, index) => {
-    const img = new Image();
-    img.src = src;
-
-    img.onload = () => {
-      preloadedCutsceneImages[index] = img;
-      loaded++;
-      checkDone();
-    };
-
-    img.onerror = () => {
-      console.error("Failed to load cutscene image:", src);
-      loaded++;
-      checkDone();
-    };
-
-    function checkDone() {
-      if (loaded === cutsceneImages.length) {
-        callback();
-      }
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    preloadedCutsceneImages[index] = img;
+    loaded++;
+    if (loaded === cutsceneImages.length) {
+      callback();
     }
-  });
+  };
+});
 }
 
 function startCutsceneProperly() {
