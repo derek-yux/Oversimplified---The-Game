@@ -392,7 +392,7 @@
   z-index: 9999;
 }
 
-#enemy-field, #player-team {
+#enemy-team, #player-team {
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -565,7 +565,7 @@ z-index: 2;
     <button id="confirm-heroes" class="disabled" disabled>Confirm Team</button>
   </div>  
   <div id="battle-arena" class="hidden">
-    <div id="enemy-field">
+    <div id="enemy-team">
       <!-- Enemy characters go here -->
     </div>
   
@@ -975,7 +975,7 @@ function renderBattleArena() {
   document.getElementById('battle-arena').classList.remove('hidden');
 
   const playerTeamDiv = document.getElementById('player-team');
-  const enemyFieldDiv = document.getElementById('enemy-field');
+  const enemyFieldDiv = document.getElementById('enemy-team');
 
   playerTeamDiv.innerHTML = '';
   enemyFieldDiv.innerHTML = '';
@@ -1010,7 +1010,7 @@ function actuallyAttackEnemy(heroIndex, enemyIndex) {
     }, 500);
   }
 
-  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1}) .character-image`);
+  const enemyCard = document.querySelector(`#enemy-team .character-card:nth-child(${enemyIndex + 1}) .character-image`);
   if (enemyCard) {
     setTimeout(() => {
       enemyCard.classList.add('hit-animation');
@@ -1058,7 +1058,7 @@ target.hp -= attackDamage;
         showBattleAnnouncement("👑 SECRET Boss Approaching: ROBESPIERRE", true);
 
         setTimeout(() => {
-          showBossCutscene("Robespierre", () => {
+          showSecretBossCutscene("Robespierre", () => {
             enemies = generateEnemiesForLevel(1, 3);
             renderBattleArena();
             isPlayerTurn = true;
@@ -1313,7 +1313,7 @@ function actuallyUseSpecialOnEnemy(heroIndex, enemyIndex) {
         showBattleAnnouncement("👑 SECRET Boss Approaching: ROBESPIERRE", true);
 
         setTimeout(() => {
-          showBossCutscene("Robespierre", () => {
+          showSecretBossCutscene("Robespierre", () => {
             enemies = generateEnemiesForLevel(1, 3);
             renderBattleArena();
             isPlayerTurn = true;
@@ -1432,6 +1432,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
   if (target.hp <= 0) {
     target.hp = 0;
     updateHealthBars();
+    }
 
     // Check victory
     const aliveEnemies = enemies.filter(e => e.hp > 0);
@@ -1453,7 +1454,7 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
         showBattleAnnouncement("👑 SECRET Boss Approaching: ROBESPIERRE", true);
 
         setTimeout(() => {
-          showBossCutscene("Robespierre", () => {
+          showSecretBossCutscene("Robespierre", () => {
             enemies = generateEnemiesForLevel(1, 3);
             renderBattleArena();
             isPlayerTurn = true;
@@ -1465,7 +1466,6 @@ function actuallyUseUltimateOnEnemy(heroIndex, enemyIndex) {
       }
       return;
     }
-  }
   endTurn();
 }
 
@@ -1490,7 +1490,7 @@ function playerAttackEnemy(enemyIndex) {
     }, 500);
   }
 
-  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1}) .character-image`);
+  const enemyCard = document.querySelector(`#enemy-team .character-card:nth-child(${enemyIndex + 1}) .character-image`);
   if (enemyCard) {
     setTimeout(() => {
       enemyCard.classList.add('hit-animation');
@@ -1535,7 +1535,7 @@ function playerAttackEnemy(enemyIndex) {
         showBattleAnnouncement("👑 SECRET Boss Approaching: ROBESPIERRE", true);
 
         setTimeout(() => {
-          showBossCutscene("Robespierre", () => {
+          showSecretBossCutscene("Robespierre", () => {
             enemies = generateEnemiesForLevel(1, 3);
             renderBattleArena();
             isPlayerTurn = true;
@@ -1561,7 +1561,7 @@ function playTeamBuffFlash() {
   });
 }
 function playBossAttackAura(enemyIndex) {
-  const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${enemyIndex + 1})`);
+  const enemyCard = document.querySelector(`#enemy-team .character-card:nth-child(${enemyIndex + 1})`);
   if (!enemyCard) return;
 
   const aura = document.createElement('div');
@@ -1582,8 +1582,8 @@ function showCharacterTooltip(event, character) {
     🛡️ Defense Boost: ${character.defenseBoost ? character.defenseBoost : 0}
   `;
 
-  tooltip.style.top = (event.clientY + 10) + 'px';
-  tooltip.style.left = (event.clientX + 10) + 'px';
+  tooltip.style.top = (event.clientY - 10) + 'px';
+  tooltip.style.left = (event.clientX - 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1593,8 +1593,8 @@ function showAttackTooltip(event, character) {
     <strong>Normal Attack</strong><br>
     Deals ${character.attack} base damage.
   `;
-  tooltip.style.top = (event.clientY + 10) + 'px';
-  tooltip.style.left = (event.clientX + 10) + 'px';
+  tooltip.style.top = (event.clientY - 10) + 'px';
+  tooltip.style.left = (event.clientX - 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1604,8 +1604,8 @@ function showSpecialTooltip(event, character) {
     <strong>Special Move: ${character.special.name}</strong><br>
     ${character.special.description}
   `;
-  tooltip.style.top = (event.clientY + 10) + 'px';
-  tooltip.style.left = (event.clientX + 10) + 'px';
+  tooltip.style.top = (event.clientY - 10) + 'px';
+  tooltip.style.left = (event.clientX - 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1630,8 +1630,8 @@ function showUltimateTooltip(event, character) {
     <em>${conditionText}</em>
   `;
 
-  tooltip.style.top = (event.clientY + 10) + 'px';
-  tooltip.style.left = (event.clientX + 10) + 'px';
+  tooltip.style.top = (event.clientY - 10) + 'px';
+  tooltip.style.left = (event.clientX - 10) + 'px';
   tooltip.classList.remove('hidden');
 }
 
@@ -1642,13 +1642,13 @@ function hideTooltip() {
 document.addEventListener('mousemove', function(e) {
   const tooltip = document.getElementById('tooltip');
   if (!tooltip.classList.contains('hidden')) {
-    tooltip.style.top = (e.clientY + 10) + 'px';
-    tooltip.style.left = (e.clientX + 10) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.style.left = (e.clientX - 10) + 'px';
   }
 });
 
 function playerSpecial(heroIndex) {
-  if (heroIndex !== activeHeroIndex) {
+  if (heroIndex !== activeHeroIndex || !isPlayerTurn) {
     showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
@@ -1678,7 +1678,7 @@ function playerSpecial(heroIndex) {
 }
 
 function playerUltimate(heroIndex) {
-  if (heroIndex !== activeHeroIndex) {
+  if (heroIndex !== activeHeroIndex || !isPlayerTurn) {
     showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
@@ -1717,7 +1717,7 @@ function actuallyUseUltimateOnSelfOrTeam(heroIndex) {
   if (ultimate.type.includes("buff")) {
     selectedTeam.forEach(h => {
       h.attack += ultimate.attackBoost || 0;
-      h.defenseBoost = (h.defenseBoost || 0) + (ultimate.defenseBoost || 0);
+      h.defense += (ultimate.defenseBoost || 0);
     });
     playTeamBuffFlash();
     showBattleAnnouncement(`${hero.name} boosts the team's attack and defense!`);
@@ -1740,11 +1740,10 @@ function actuallyUseUltimateOnEnemies(heroIndex) {
 
   hero.ultimate.used = true;
   updateHealthBars();
-
     // Check victory
-    const aliveEnemies = enemies.filter(e => e.hp > 0);
-    if (aliveEnemies.length === 0) {
-        if (enemyWave === 1) {
+  const aliveEnemies = enemies.filter(e => e.hp > 0);
+  if (aliveEnemies.length === 0) {
+      if (enemyWave === 1) {
         enemyWave = 2;
         showBattleAnnouncement("👑 Boss Approaching: King Louis XVI!", true);
 
@@ -1761,7 +1760,7 @@ function actuallyUseUltimateOnEnemies(heroIndex) {
         showBattleAnnouncement("👑 SECRET Boss Approaching: ROBESPIERRE", true);
 
         setTimeout(() => {
-          showBossCutscene("Robespierre", () => {
+          showSecretBossCutscene("Robespierre", () => {
             enemies = generateEnemiesForLevel(1, 3);
             renderBattleArena();
             isPlayerTurn = true;
@@ -1771,14 +1770,14 @@ function actuallyUseUltimateOnEnemies(heroIndex) {
       } else if (enemyWave === 3) {
         handleVictory(2);
       }
-      return;
-    }
+    return;
+  }
   endTurn();
 }
 
 function highlightAttackableEnemies() {
   enemies.forEach((enemy, index) => {
-    const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${index + 1})`);
+    const enemyCard = document.querySelector(`#enemy-team .character-card:nth-child(${index + 1})`);
     if (enemyCard && enemy.hp > 0) {
       enemyCard.classList.add('glow-attackable');
     }
@@ -1786,7 +1785,7 @@ function highlightAttackableEnemies() {
 }
 
 function clearHighlightAttackableEnemies() {
-  document.querySelectorAll('#enemy-field .character-card').forEach(card => {
+  document.querySelectorAll('#enemy-team .character-card').forEach(card => {
     card.classList.remove('glow-attackable');
   });
 }
@@ -1867,7 +1866,7 @@ function updateHealthBars() {
   enemies.forEach((enemy, i) => {
     updateHealthBar('enemy', i, enemy.hp, enemy.maxHp);
 
-    const enemyCard = document.querySelector(`#enemy-field .character-card:nth-child(${i + 1})`);
+    const enemyCard = document.querySelector(`#enemy-team .character-card:nth-child(${i + 1})`);
     const statusIcon = document.getElementById(`status-icon-${i}`);
 
     if (enemyCard && statusIcon) {
@@ -1899,7 +1898,7 @@ function updateHealthBars() {
 }
 
 function playerAttack(heroIndex) {
-  if (heroIndex !== activeHeroIndex) {
+  if (heroIndex !== activeHeroIndex || !isPlayerTurn) {
     showCustomPopup("⏳ It's not your turn yet! Wait for your active hero.");
     return;
   }
@@ -2149,12 +2148,12 @@ function enemyTurn() {
   });
   
   // Highlight attacking enemy
-  const enemyCards = document.querySelectorAll('#enemy-field .character-card');
+  const enemyCards = document.querySelectorAll('#enemy-team .character-card');
   if (enemyCards[attackerIndex]) {
     enemyCards[attackerIndex].classList.add('active-character');
   }
 
-   if (attacker.attackLines && attacker.attackLines.length > 0) {
+  if (attacker.attackLines.length > 0) {
     const randomAttackLine = attacker.attackLines[Math.floor(Math.random() * attacker.attackLines.length)];
     showFloatingLine(randomAttackLine, "enemy", attackerIndex);
   }
@@ -2206,7 +2205,7 @@ setTimeout(() => {
       
       // Play hit animation
       const heroCard = (targetHero === attacker) 
-        ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1}) .character-image`)
+        ? document.querySelector(`#enemy-team .character-card:nth-child(${attackerIndex + 1}) .character-image`)
         : document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1}) .character-image`);
 
       if (heroCard) {
@@ -2229,7 +2228,7 @@ setTimeout(() => {
       damageText.classList.add('damage-number');
       
       const targetCard = (targetHero === attacker) 
-        ? document.querySelector(`#enemy-field .character-card:nth-child(${attackerIndex + 1})`)
+        ? document.querySelector(`#enemy-team .character-card:nth-child(${attackerIndex + 1})`)
         : document.querySelector(`#player-team .character-card:nth-child(${targetIndex + 1})`);
         
       if (targetCard) {
@@ -2288,7 +2287,7 @@ function highlightActiveCharacter(index, type) {
   
   // Add highlight to active character
   const selector = type === "enemy" ? 
-    `#enemy-field .character-card:nth-child(${index + 1})` : 
+    `#enemy-team .character-card:nth-child(${index + 1})` : 
     `#player-team .character-card:nth-child(${index + 1})`;
     
   const card = document.querySelector(selector);
@@ -2586,13 +2585,21 @@ function getHighestLevelWon() {
   return highest;
 }
 function showBossCutscene(bossName, callback) {
-  if (bossName == 'Robespierre') {
-    const cutscene = document.getElementById('secret-boss-cutscene')
-    document.getElementById('secret-boss-name').textContent = bossName;
-  } else {
-    const cutscene = document.getElementById('boss-cutscene');
-    document.getElementById('boss-name').textContent = bossName;
-  }
+  const cutscene = document.getElementById('boss-cutscene');
+  document.getElementById('boss-name').textContent = bossName;
+
+  cutscene.style.opacity = '1';
+  cutscene.style.pointerEvents = 'auto';
+
+  setTimeout(() => {
+    cutscene.style.opacity = '0';
+    cutscene.style.pointerEvents = 'none';
+    callback();
+  }, 2000); // Show for 2 seconds, then hide and continue
+}
+function showSecretBossCutscene(bossName, callback) {
+  const cutscene = document.getElementById('secret-boss-cutscene');
+  document.getElementById('secret-boss-name').textContent = bossName;
 
   cutscene.style.opacity = '1';
   cutscene.style.pointerEvents = 'auto';
